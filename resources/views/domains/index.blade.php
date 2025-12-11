@@ -1,0 +1,593 @@
+@extends('layouts.master')
+
+@section('content')
+
+<style>
+    /* .uptime-bar {
+        min-height: 10px;
+        border: 1px solid purple;
+    } */
+    .uptime-seg {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+    }
+   
+    i.ri-arrow-up-line, i.ri-arrow-down-line {
+     font-size: 2em;
+    }  
+   
+</style>
+<div class="row">
+    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">Domains</h5>
+            <p class="text-muted mb-0">Liveness & SSL status</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDomainModal">
+                <i class="ri-add-line me-1"></i> Add domain(s)
+            </button>
+            <button class="btn btn-primary btn-sm" id="btn-check-batch">
+                <i class="ri-refresh-line me-1"></i> Manual check (all)
+            </button>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3 col-sm-6">
+            <div class="card custom-card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted">Total Domains</div>
+                        <div class="fs-4 fw-semibold">{{ $total }}</div>
+                    </div>
+                    <span class="avatar avatar-md bg-primary-transparent text-primary">
+                        <i class="ri-links-line"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card custom-card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted">Online</div>
+                        <div class="fs-4 fw-semibold text-success">{{ $up }}</div>
+                    </div>
+                    <span class="avatar avatar-md bg-success-transparent text-success">
+                        <i class="ri-checkbox-circle-line"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card custom-card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted">Offline</div>
+                        <div class="fs-4 fw-semibold text-danger">{{ $down }}</div>
+                    </div>
+                    <span class="avatar avatar-md bg-danger-transparent text-danger">
+                        <i class="ri-close-circle-line"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card custom-card h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted">Pending</div>
+                        <div class="fs-4 fw-semibold text-secondary">{{ $pending }}</div>
+                    </div>
+                    <span class="avatar avatar-md bg-secondary-transparent text-secondary">
+                        <i class="ri-time-line"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Domain Modal -->
+    <div class="modal fade" id="addDomainModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Add domain(s)</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-2">Add one domain per line. We’ll create any new ones as pending.</p>
+                    <form id="addDomainsForm">
+                        <div class="mb-3">
+                            <textarea name="domains" class="form-control" rows="6" placeholder="example.com&#10;another-domain.com" required></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-save-line me-1"></i> Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card custom-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th>Status</th>
+                            <th>SSL</th>
+                            <th>Last Checked</th>
+                            <th>Campaign</th>
+                           
+                            <th>Error</th>
+                            <th class="text-end" style="min-width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($domains as $domain)
+                            <tr data-domain-id="{{ $domain->id }}">
+                                <td>{{ $domain->domain }}</td>
+                                <td>
+                                    @if($domain->status === 'ok')
+                                        <span class="badge bg-success">Up</span>
+                                    @elseif($domain->status === 'down')
+                                        <span class="badge bg-danger">Down</span>
+                                    @elseif($domain->status === 'pending')
+                                        <span class="badge bg-secondary">Pending</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Error</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(is_null($domain->ssl_valid))
+                                        <span class="badge bg-secondary">Unknown</span>
+                                    @elseif($domain->ssl_valid)
+                                        <span class="badge bg-success">Valid</span>
+                                    @else
+                                        <span class="badge bg-danger">Invalid</span>
+                                    @endif
+                                </td>
+                                <td>{{ $domain->last_checked_at ? $domain->last_checked_at->diffForHumans() : '—' }}</td>
+                                <td class="col-campaign text-truncate" style="max-width:180px;">
+                                    {{ $domain->campaign ?? '—' }}
+                                </td>
+                               
+                                <td class="text-truncate" style="max-width: 360px;">
+                                    @php
+                                        $isDown = $domain->status === 'down';
+                                        $downSince = $domain->status_since?->diffForHumans() ?? '—';
+                                        $lastUp = $domain->last_up_at ? $domain->last_up_at->diffForHumans() : '—';
+                                        $lastDown = $domain->last_down_at ? $domain->last_down_at->diffForHumans() : '—';
+                                        $errMsg = $domain->last_check_error ?? '—';
+                                        $segments = [];
+                                        // Basic bar: if down -> first red rest gray, if up -> all green, pending/error -> gray
+                                        if ($domain->status === 'down') {
+                                            $segments = array_merge(['down'], array_fill(1, 11, 'idle'));
+                                        } elseif ($domain->status === 'ok') {
+                                            $segments = array_fill(0, 12, 'up');
+                                        } else {
+                                            $segments = array_fill(0, 12, 'idle');
+                                        }
+                                        $history = $domain->history ?? [];
+                                        $segments = array_slice($history, -12);
+                                        if (empty($segments)) {
+                                            if ($domain->status === 'down') {
+                                                $segments = array_merge(['down'], array_fill(1, 11, 'idle'));
+                                            } elseif ($domain->status === 'ok') {
+                                                $segments = array_fill(0, 12, 'up');
+                                            } else {
+                                                $segments = array_fill(0, 12, 'idle');
+                                            }
+                                        }
+                                    @endphp
+                                    <div class="d-flex align-items-start gap-2">
+                                        <span class="{{ $isDown ? 'text-danger' : 'text-success' }}" data-bs-toggle="tooltip" title="{{ $errMsg }}">
+                                            <i class="{{ $isDown ? 'ri-arrow-down-line' : 'ri-arrow-up-line' }}"></i>
+                                        </span>
+                                        <div class="w-100">
+                                            <small class="text-muted d-block">
+                                                @if($isDown)
+                                                    Down since {{ $downSince }}  <br>last up {{ $lastUp }}
+                                                @else
+                                                    Up since {{ $downSince }}  <br>last down {{ $lastDown }}
+                                                @endif
+                                            </small>
+
+                                            <div class="uptime-bar d-flex gap-1 mt-1">
+                                                @foreach($segments as $seg)
+                                                    @php
+                                                        $cls = $seg === 'up' ? 'bg-success' : ($seg === 'down' ? 'bg-danger' : 'bg-secondary opacity-50');
+                                                    @endphp
+                                                    <span class="uptime-seg {{ $cls }}"></span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end" style="min-width: 140px; white-space: nowrap; padding: 8px;">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-domain"
+                                                data-domain-id="{{ $domain->id }}"
+                                                data-domain="{{ $domain->domain }}"
+                                                data-campaign="{{ $domain->campaign }}"
+                                                title="Edit domain">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <form method="POST" action="{{ route('domains.destroy', $domain) }}" onsubmit="return confirm('Delete this domain?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete domain">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="{{ $domain->id }}" title="Check this domain">
+                                            <i class="ri-search-line me-1"></i> Check
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-4">No domains ingested yet.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            {{ $domains->links() }}
+        </div>
+    </div>
+</div>
+<!-- Edit Domain Modal -->
+<div class="modal fade" id="editDomainModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Edit domain</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editDomainForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Domain URL</label>
+                        <input type="text" name="domain" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Campaign</label>
+                        <input type="text" name="campaign" class="form-control" placeholder="optional">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+@endsection
+
+@push('styles')
+<style>
+    #alert-container.alert-fixed {
+         display: block;
+        min-width: 280px;
+        max-width: 520px;
+        
+    }
+    /* #alert-container.alert-fixed .alert {
+        opacity: 1 !important;
+    } */
+    .uptime-seg {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+    }
+    .col-error {
+        min-height: 48px;
+    }
+    #alert-container{
+        
+        z-index: 1080;
+        position: sticky;
+        top: 150px;
+        max-width: 400px;
+        
+    }
+   
+</style>
+@endpush
+
+@section('scripts')
+<script>
+(function() {
+    const csrf = '{{ csrf_token() }}';
+    const checkBase = @json(url('domains'));
+    const routes = {
+        store: @json(route('domains.store')),
+        checkAll: @json(route('domains.checkAll')),
+        checkOne: function(id) {
+            return `${checkBase}/${id}/check`;
+        },
+    };
+
+    const alertContainer = document.getElementById('alert-container');
+    if (alertContainer) {
+        //alertContainer.classList.add('position-fixed',   );
+        alertContainer.style.zIndex = '1080';
+    }
+
+    function showAlert(type, message) {
+        const div = document.createElement('div');
+        div.className = `alert alert-${type} alert-dismissible fade show  `;
+        div.role = 'alert';
+        div.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.appendChild(div);
+        setTimeout(() => div.classList.add('show'), 10);
+        setTimeout(() => div.remove(), 5000);
+    }
+
+    function renderBadgeStatus(status) {
+        if (status === 'ok') return '<span class="badge bg-success">Up</span>';
+        if (status === 'down') return '<span class="badge bg-danger">Down</span>';
+        if (status === 'pending') return '<span class="badge bg-secondary">Pending</span>';
+        return '<span class="badge bg-warning text-dark">Error</span>';
+    }
+
+    function renderBadgeSsl(val) {
+        if (val === null || val === undefined) return '<span class="badge bg-secondary">Unknown</span>';
+        return val ? '<span class="badge bg-success">Valid</span>' : '<span class="badge bg-danger">Invalid</span>';
+    }
+
+    function initTooltips() {
+        if (!window.bootstrap) return;
+        const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(el => {
+            if (el._tooltip) return;
+            el._tooltip = new bootstrap.Tooltip(el);
+        });
+    }
+
+    function updateRow(domain) {
+        let row = document.querySelector(`tr[data-domain-id="${domain.id}"]`);
+        if (!row) {
+            const tbody = document.querySelector('table tbody');
+            row = document.createElement('tr');
+            row.setAttribute('data-domain-id', domain.id);
+            row.innerHTML = `
+                <td class="col-domain"></td>
+                <td class="col-status"></td>
+                <td class="col-ssl"></td>
+                <td class="col-checked"></td>
+                <td class="col-campaign text-truncate" style="max-width:180px;"></td>
+                <td class="col-error text-truncate" style="max-width:250px;"></td>
+                <td class="text-end" style="min-width: 140px; white-space: nowrap; padding: 8px;">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-domain"
+                            data-domain-id="${domain.id}" data-domain="${domain.domain ?? ''}" data-campaign="${domain.campaign ?? ''}"
+                            title="Edit domain">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-delete-domain" data-domain-id="${domain.id}" title="Delete domain">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="${domain.id}" title="Check this domain">
+                            <i class="ri-search-line me-1"></i> Check
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.prepend(row);
+        }
+        const cd = row.querySelector('.col-domain');
+        const cs = row.querySelector('.col-status');
+        const ssl = row.querySelector('.col-ssl');
+        const chk = row.querySelector('.col-checked');
+        const camp = row.querySelector('.col-campaign');
+        const err = row.querySelector('.col-error');
+
+        if (cd) cd.textContent = domain.domain;
+        if (cs) cs.innerHTML = renderBadgeStatus(domain.status);
+        if (ssl) ssl.innerHTML = renderBadgeSsl(domain.ssl_valid);
+        if (chk) chk.textContent = domain.last_checked_at ?? '—';
+        if (camp) camp.textContent = domain.campaign ?? '—';
+        const editBtn = row.querySelector('.btn-edit-domain');
+        if (editBtn) {
+            editBtn.dataset.domain = domain.domain ?? '';
+            editBtn.dataset.campaign = domain.campaign ?? '';
+        }
+        if (err) {
+            const isDown = domain.status === 'down';
+            const downSince = domain.status_since ?? '—';
+            const lastUp = domain.last_up_at ?? '—';
+            const lastDown = domain.last_down_at ?? '—';
+            const errMsg = domain.error ?? '—';
+            const history = Array.isArray(domain.history) ? domain.history : [];
+            let segments = history.slice(-12);
+            if (!segments.length) {
+                if (domain.status === 'down') {
+                    segments = ['down', ...Array(11).fill('idle')];
+                } else if (domain.status === 'ok') {
+                    segments = Array(12).fill('up');
+                } else {
+                    segments = Array(12).fill('idle');
+                }
+            }
+            const segHtml = segments.map(seg => {
+                const cls = seg === 'up' ? 'bg-success' : (seg === 'down' ? 'bg-danger' : 'bg-secondary opacity-50');
+                return `<span class="uptime-seg ${cls}"></span>`;
+            }).join('');
+
+            err.innerHTML = `
+                <div class="d-flex align-items-start gap-2">
+                    <span class="${isDown ? 'text-danger' : 'text-success'}" data-bs-toggle="tooltip" title="${errMsg}">
+                        <i class="${isDown ? 'ri-arrow-down-line' : 'ri-arrow-up-line'}"></i>
+                    </span>
+                    <div class="w-100">
+                        <small class="text-muted d-block">
+                            ${isDown
+                                ? `Down since ${downSince}; last up ${lastUp}`
+                                : `Up since ${downSince}; last down ${lastDown}`
+                            }
+                        </small>
+                        <div class="uptime-bar d-flex gap-1 mt-1">
+                            ${segHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+            initTooltips();
+        }
+    }
+
+    async function postJson(url, body = {}) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+            },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || 'Request failed');
+        }
+        return res.json();
+    }
+
+    // Add domains
+    document.getElementById('addDomainsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const textarea = e.target.querySelector('textarea[name="domains"]');
+        try {
+            const data = await postJson(routes.store, { domains: textarea.value });
+            (data.domains || []).forEach(updateRow);
+            showAlert('success', data.message || 'Domains added.');
+            textarea.value = '';
+            const modalEl = document.getElementById('addDomainModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        } catch (err) {
+            showAlert('danger', err.message);
+        }
+    });
+
+    // Check batch (manual all)
+    const btnCheckBatch = document.getElementById('btn-check-batch');
+    if (btnCheckBatch) {
+        btnCheckBatch.addEventListener('click', async () => {
+            const originalHtml = btnCheckBatch.innerHTML;
+            btnCheckBatch.disabled = true;
+            btnCheckBatch.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Checking...`;
+            try {
+                const data = await postJson(routes.checkAll);
+                (data.domains || []).forEach(updateRow);
+                showAlert('success', data.message || 'Checked batch.');
+                initTooltips();
+            } catch (err) {
+                showAlert('danger', err.message || 'Error running manual check.');
+            } finally {
+                btnCheckBatch.disabled = false;
+                btnCheckBatch.innerHTML = originalHtml;
+            }
+        });
+    }
+
+    // Check single domain - event delegation
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-check-domain');
+        if (!btn) return;
+        
+        const id = btn.dataset.domainId;
+        if (!id) return;
+        
+        btn.disabled = true;
+        
+        try {
+            const url = routes.checkOne(id);
+            const data = await postJson(url);
+            if (data.domain) updateRow(data.domain);
+            showAlert('success', data.message || 'Domain checked successfully.');
+            initTooltips();
+        } catch (err) {
+            showAlert('danger', err.message || 'Error checking domain.');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Delete domain (AJAX)
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-delete-domain');
+        if (!btn) return;
+        if (!confirm('Delete this domain?')) return;
+
+        const id = btn.dataset.domainId;
+        if (!id) return;
+
+        btn.disabled = true;
+        try {
+            const res = await fetch(`${checkBase}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Delete failed');
+            }
+            // remove row
+            const row = document.querySelector(`tr[data-domain-id="${id}"]`);
+            if (row) row.remove();
+            showAlert('success', 'Domain deleted.');
+        } catch (err) {
+            showAlert('danger', err.message || 'Error deleting domain.');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Edit domain - open modal
+    const editForm = document.getElementById('editDomainForm');
+    const editModalEl = document.getElementById('editDomainModal');
+    const editModal = editModalEl ? new bootstrap.Modal(editModalEl) : null;
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-edit-domain');
+        if (!btn || !editForm || !editModal) return;
+        const id = btn.dataset.domainId;
+        const domainVal = btn.dataset.domain || '';
+        const campaignVal = btn.dataset.campaign || '';
+        editForm.action = `${checkBase}/${id}`;
+        editForm.querySelector('input[name="domain"]').value = domainVal;
+        editForm.querySelector('input[name="campaign"]').value = campaignVal;
+        editModal.show();
+    });
+
+    // init existing tooltips on load
+    initTooltips();
+
+})();
+</script>
+@endsection
