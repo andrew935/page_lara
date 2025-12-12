@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\CheckDomainJob;
 use App\Models\Domain;
+use App\Support\AccountResolver;
 use Illuminate\Console\Command;
 
 class CheckDomains extends Command
@@ -14,14 +15,18 @@ class CheckDomains extends Command
 
     public function handle(): int
     {
+        $account = AccountResolver::current();
         $domainArg = $this->argument('domain');
         $checkAll = $this->option('all');
         $limit = (int) $this->option('limit');
 
         if ($domainArg) {
-            $domains = Domain::where('domain', $domainArg)->get();
+            $domains = Domain::where('domain', $domainArg)
+                ->where('account_id', $account->id)
+                ->get();
         } elseif ($checkAll) {
-            $domains = Domain::orderBy('last_checked_at')->limit($limit)->get();
+            $domains = Domain::where('account_id', $account->id)
+                ->orderBy('last_checked_at')->limit($limit)->get();
         } else {
             $this->error('Provide a domain or use --all');
             return self::INVALID;

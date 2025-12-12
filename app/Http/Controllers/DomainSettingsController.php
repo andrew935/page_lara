@@ -3,18 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\DomainSetting;
+use App\Support\AccountResolver;
 use Illuminate\Http\Request;
 
 class DomainSettingsController extends Controller
 {
     public function edit()
     {
-        $settings = DomainSetting::first() ?? new DomainSetting([
-            'check_interval_minutes' => 60,
-            'notify_on_fail' => false,
-            'notify_payload' => null,
-            'feed_url' => config('domain.source_url'),
-        ]);
+        $account = AccountResolver::current();
+        $settings = DomainSetting::firstOrCreate(
+            ['account_id' => $account->id],
+            [
+                'check_interval_minutes' => 60,
+                'notify_on_fail' => false,
+                'notify_payload' => null,
+                'feed_url' => config('domain.source_url'),
+            ]
+        );
 
         return view('domains.settings', compact('settings'));
     }
@@ -28,12 +33,9 @@ class DomainSettingsController extends Controller
             'feed_url' => ['nullable', 'url'],
         ]);
 
-        $settings = DomainSetting::first();
-        if ($settings) {
-            $settings->update($data);
-        } else {
-            $settings = DomainSetting::create($data);
-        }
+        $account = AccountResolver::current();
+        $settings = DomainSetting::firstOrCreate(['account_id' => $account->id]);
+        $settings->update($data);
 
         return redirect()->route('domains.settings.edit')->with('success', 'Settings saved.');
     }

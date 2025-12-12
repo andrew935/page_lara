@@ -5,7 +5,7 @@
 				<div class="main-sidebar-header">
 					<a href="{{url('index')}}" class="header-logo">
 						<img src="{{asset('build/assets/images/brand-logos/desktop-logo.png')}}" alt="logo" class="desktop-logo">
-						<img src="{{asset('build/assets/images/brand-logos/toggle-dark.png')}}" alt="logo" class="toggle-dark">
+						<img src="{{ asset('img/2.jpg') }}" alt="logo" class="toggle-dark">
 						<img src="{{asset('build/assets/images/brand-logos/desktop-dark.png')}}" alt="logo" class="desktop-dark">
 						<img src="{{asset('build/assets/images/brand-logos/toggle-logo.png')}}" alt="logo" class="toggle-logo">
 					</a>
@@ -108,30 +108,7 @@
 						</li>
 						<!-- End::slide -->
 
-						
-
-						<li>
-							<ul class="slide-menu child1 doublemenu_slide-menu">
-								<li class="text-center p-3 text-fixed-white">
-									<div class="doublemenu_slide-menu-background">
-										<img src="{{asset('build/assets/images/media/backgrounds/13.png')}}" alt="">
-									</div>
-									<div class="d-flex flex-column align-items-center justify-content-between h-100">
-										<div class="fs-15 fw-medium">Dashboard AI Helper</div>
-										<div>
-											<span class="avatar avatar-lg p-1">
-												<img src="{{asset('build/assets/images/media/media-80.png')}}" alt="">
-												<span class="top-right"></span>
-												<span class="bottom-right"></span>
-											</span>
-										</div>
-										<div class="d-grid w-100">
-											<button class="btn btn-light border-0">Try Now</button>
-										</div>
-									</div>
-								</li>
-							</ul>
-						</li>
+                        
 
 
 						</ul>

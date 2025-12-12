@@ -12,16 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Respect configured interval; fallback to hourly
-        $minutes = 60;
-        if (class_exists(\App\Models\DomainSetting::class)) {
-            $setting = \App\Models\DomainSetting::first();
-            if ($setting && $setting->check_interval_minutes) {
-                $minutes = max(1, min(1440, (int) $setting->check_interval_minutes));
-            }
-        }
-        $schedule->command('domains:check --all --limit=' . config('domain.schedule_batch', 50))
-            ->everyMinutes($minutes);
+        // Run scheduler frequently; per-account intervals enforced in command
+        $schedule->command('monitoring:schedule-checks')->everyFiveMinutes();
     }
 
     /**

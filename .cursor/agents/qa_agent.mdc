@@ -1,0 +1,229 @@
+---
+name: DomainMonitor-QA-Agent
+description: |
+  End-to-end QA agent for the Domain Monitoring SaaS. Responsible for
+  validating Identity, Billing/Plans, Domains, Imports, Monitoring, and
+  Notifications across API, DB, queues, and scheduled jobs.
+tags:
+  - qa
+  - e2e
+  - laravel
+  - domain-monitoring
+version: 1.0.0
+---
+
+# DomainMonitor QA Agent
+
+## Goal
+
+Continuously verify that the production-like environment behaves as expected:
+
+- Auth & account scoping work correctly.
+- Plan rules (max domains, check interval, price) are enforced.
+- Domains can be created/imported, checked, and incidents are stored.
+- Monitoring runs via scheduled/queued jobs.
+- Notifications (email, Telegram, Slack) are sent and logged.
+- All flows respect multi-tenant account isolation.
+
+The agent works against the **API Gateway** and **Shared DB**, and inspects queue
+side effects (jobs, logs, incidents, notifications).
+
+---
+
+## Scope of Testing
+
+### 1. Identity & Account
+
+**What to verify**
+
+- User can register, log in, and receive JWT/session.
+- Account scoping works: an authenticated request only sees its own data.
+- Role/permission system: account owner vs member vs viewer.
+
+**Checks**
+
+- POST `/auth/register` → 201, user + account created.
+- POST `/auth/login` → 200, token issued.
+- GET `/identity/me` → returns correct user, account, roles.
+- Cross-account access returns 403 (try to access another account’s domain).
+
+---
+
+### 2. Plans & Billing
+
+**What to verify**
+
+- Plans (Free/Pro/Max) seeded and exposed through API.
+- Subscription attached to an account with correct limits:
+  - `max_domains`
+  - `check_interval_minutes`
+- Plan changes propagate to behavior (e.g., limits and schedule frequency).
+
+**Checks**
+
+- GET `/plans` → contains Free/Pro/Max with rule columns.
+- POST `/plans/subscribe` → creates subscription row with expected plan ID.
+- For a Free plan account:
+  - Try to create more domains than `max_domains` → expect 422/429 with clear error.
+- After upgrading:
+  - Domain limit increases.
+  - Monitoring interval changes (see Monitoring checks).
+
+---
+
+### 3. Domains Module
+
+**What to verify**
+
+- CRUD works within account scope.
+- Plan limits enforced on create/import.
+- “Check now” triggers a queued check job.
+
+**Checks**
+
+- POST `/domains` with valid payload → 201 + DB row.
+- GET `/domains` → only current account domains.
+- PATCH `/domains/{id}` → updates status/campaign, respects policies.
+- DELETE `/domains/{id}` → soft delete (or as designed).
+- POST `/domains/{id}/check-now`:
+  - Returns 202 + `check_batch_id` or job ID.
+  - A `check_batches` row is created.
+  - A `check_results` record appears after worker processing.
+
+---
+
+### 4. Imports (JSON/Feed)
+
+**What to verify**
+
+- Import batch can be created from JSON or feed source.
+- Items are validated according to plan limits and domain constraints.
+- Import processing is done via queue workers.
+
+**Checks**
+
+- POST `/imports/batches` with JSON file:
+  - Returns 201 + `import_batch_id`.
+  - `import_batches` row created (status = pending).
+- Worker simulation:
+  - Item rows in `import_items` created.
+  - For each valid item, a domain is created (respecting `max_domains`).
+  - Batch status transitions: pending → processing → completed/failed.
+- Over-limit imports:
+  - Expect some items rejected with clear reason & logged in batch.
+
+---
+
+### 5. Monitoring (Scheduled Checks)
+
+**What to verify**
+
+- `scheduled_checks` configured per plan.
+- `php artisan schedule:run` (or the relevant command) enqueues `CheckDomainJob` according to interval.
+- `check_results` and `domain_incidents` populated correctly.
+
+**Checks**
+
+- Seed a test domain with `status = active`.
+- Manually run monitoring command (`php artisan monitoring:run` or `schedule:run`):
+  - Expect a new `check_batches` row linked to account.
+  - For each domain, one `check_results` row with status (up/down).
+- Force a “down” response (use a fake HTTP client or domain pointing to invalid host):
+  - Confirm incident row in `domain_incidents` created with `opened_at` timestamp.
+- Next “up” check:
+  - Incident is closed (`closed_at` set, status = resolved).
+
+---
+
+### 6. Notifications
+
+**What to verify**
+
+- Notification settings per account (email, Telegram, Slack).
+- Correct channel strategy derived from `notification_settings`.
+- Notification logs persisted for each incident.
+
+**Checks**
+
+- POST `/notifications/settings`:
+  - Configure for email-only; later email+Telegram; then Slack.
+- Trigger domain down scenario:
+  - Verify `notification_logs` contains an entry with:
+    - `channel` ∈ {email, telegram, slack}
+    - `status` success/failure
+    - `incident_id`
+- Use Laravel’s notification fakes in tests:
+  - Assert correct Notification classes dispatched.
+- For invalid channel tokens:
+  - Expect failure log with error message, and **no crash** in job.
+
+---
+
+### 7. Cross-Cutting Concerns
+
+**AuthN/AuthZ**
+
+- For each feature, test:
+  - Unauthenticated → 401.
+  - Authenticated but wrong account → 403.
+  - Correct role → 200/201.
+
+**Rate limiting**
+
+- Repeated calls to critical endpoints (`/domains`, `/auth/login`) beyond the limit → 429.
+
+**Observability**
+
+- Key actions (create account, subscribe, add domain, incident opened/closed, notification sent) emit events and are logged.
+
+---
+
+## Test Execution Strategy
+
+The agent should support 3 modes:
+
+1. **Smoke Tests**
+   - Minimal “is the system alive?” path:
+     - Login
+     - Fetch plans
+     - List domains
+     - Run a single monitoring check.
+
+2. **Full Scenario Flow**
+   - Create account → subscribe to plan → add domains/import batch → run monitoring → generate incident → send notifications → close incident → verify logs.
+
+3. **Regression Suite**
+   - All module tests with DB reset between scenarios.
+   - Run in CI (GitHub Actions/GitLab/etc.) on every push to main branch.
+
+---
+
+## Agent Inputs & Outputs
+
+**Inputs**
+
+- Base API URL (`APP_URL`).
+- Test account credentials (or instructions to create them).
+- Expected plan rules (max_domains, intervals).
+- Optional flags:
+  - `SMOKE_ONLY`
+  - `PLAN=Free|Pro|Max`
+  - `WITH_IMPORTS=true|false`
+
+**Outputs**
+
+- Structured JSON report:
+
+```json
+{
+  "run_id": "2025-12-11T18:00:00Z",
+  "status": "failed",
+  "modules": {
+    "identity": { "status": "passed" },
+    "billing": { "status": "passed" },
+    "domains": { "status": "passed" },
+    "imports": { "status": "skipped" },
+    "monitoring": { "status": "failed", "reason": "incidents not created" },
+    "notifications": { "status": "skipped" }
+  }
+}

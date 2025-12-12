@@ -10,6 +10,7 @@ class Domain extends Model
     use HasFactory;
 
     protected $fillable = [
+        'account_id',
         'domain',
         'campaign',
         'status',

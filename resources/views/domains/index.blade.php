@@ -13,6 +13,15 @@
         height: 10px;
         border-radius: 2px;
     }
+    .uptime-seg.up {
+        background-color: #32d484;
+    }
+    .uptime-seg.down {
+        background-color: #ff6757;
+    }
+    .uptime-seg.idle {
+        background-color: rgba(108, 117, 125, 0.5);
+    }
    
     i.ri-arrow-up-line, i.ri-arrow-down-line {
      font-size: 2em;
@@ -118,7 +127,17 @@
     </div>
 
     <div class="card custom-card">
-        <div class="card-body p-0">
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-sm-6 col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="ri-search-line text-muted"></i>
+                        </span>
+                        <input id="domainSearch" type="search" class="form-control border-start-0" placeholder="Search domains, campaigns, status...">
+                    </div>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table mb-0">
                     <thead>
@@ -206,9 +225,13 @@
                                             <div class="uptime-bar d-flex gap-1 mt-1">
                                                 @foreach($segments as $seg)
                                                     @php
-                                                        $cls = $seg === 'up' ? 'bg-success' : ($seg === 'down' ? 'bg-danger' : 'bg-secondary opacity-50');
+                                                        $cls = match ($seg) {
+                                                            'up' => 'up',
+                                                            'down' => 'down',
+                                                            default => 'idle',
+                                                        };
                                                     @endphp
-                                                    <span class="uptime-seg {{ $cls }}"></span>
+                                                <span class="uptime-seg {{ $cls }}"></span>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -241,12 +264,15 @@
                                 <td colspan="6" class="text-center py-4">No domains ingested yet.</td>
                             </tr>
                         @endforelse
+                        <tr id="domains-no-results" class="d-none">
+                            <td colspan="6" class="text-center py-4 text-muted">No matching domains.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="card-footer">
-            {{ $domains->links() }}
+        <div class="card-footer py-2">
+            {{ $domains->links('pagination::bootstrap-5') }}
         </div>
     </div>
 </div>
@@ -297,6 +323,15 @@
         width: 10px;
         height: 10px;
         border-radius: 2px;
+    }
+    .uptime-seg.up {
+        background-color: #32d484;
+    }
+    .uptime-seg.down {
+        background-color: #ff6757;
+    }
+    .uptime-seg.idle {
+        background-color: rgba(108, 117, 125, 0.5);
     }
     .col-error {
         min-height: 48px;
@@ -366,6 +401,33 @@
         });
     }
 
+    // Live search/filter
+    const searchInput = document.getElementById('domainSearch');
+    const tableBody = document.querySelector('table tbody');
+    const noResultsRow = document.getElementById('domains-no-results');
+
+    function applyFilter(term) {
+        if (!tableBody) return;
+        const q = term.trim().toLowerCase();
+        let visible = 0;
+        tableBody.querySelectorAll('tr[data-domain-id]').forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const match = text.includes(q);
+            row.classList.toggle('d-none', !match);
+            if (match) visible++;
+        });
+
+        if (noResultsRow) {
+            noResultsRow.classList.toggle('d-none', visible !== 0);
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            applyFilter(e.target.value);
+        });
+    }
+
     function updateRow(domain) {
         let row = document.querySelector(`tr[data-domain-id="${domain.id}"]`);
         if (!row) {
@@ -432,7 +494,7 @@
                 }
             }
             const segHtml = segments.map(seg => {
-                const cls = seg === 'up' ? 'bg-success' : (seg === 'down' ? 'bg-danger' : 'bg-secondary opacity-50');
+                const cls = seg === 'up' ? 'up' : (seg === 'down' ? 'down' : 'idle');
                 return `<span class="uptime-seg ${cls}"></span>`;
             }).join('');
 

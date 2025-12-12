@@ -3,14 +3,15 @@
 namespace App\Jobs;
 
 use App\Models\Domain;
-use App\Models\TelegramConnection;
+use App\Domains\DomainIncident;
+use App\Notifications\NotificationSetting;
 use App\Services\DomainCheckService;
+use App\Jobs\SendAlertJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CheckDomainJob implements ShouldQueue
@@ -53,14 +54,17 @@ class CheckDomainJob implements ShouldQueue
         $domain->update($payload);
 
         if ($oldStatus !== 'down' && $result['status'] === 'down') {
+            $this->openIncident($domain, $oldStatus, $result['status'], $result['error']);
             $this->notifyDown($domain, $result['error']);
+        } elseif ($oldStatus === 'down' && $result['status'] === 'ok') {
+            $this->closeIncident($domain);
         }
     }
 
     protected function notifyDown(Domain $domain, ?string $error): void
     {
-        $connection = TelegramConnection::first();
-        if (!$connection || !$connection->api_key || !$connection->chat_id) {
+        $settings = NotificationSetting::where('account_id', $domain->account_id)->first();
+        if (!$settings || !$settings->notify_on_fail) {
             return;
         }
 
@@ -69,15 +73,31 @@ class CheckDomainJob implements ShouldQueue
             $message .= " — {$error}";
         }
 
-        try {
-            Http::timeout(10)->post("https://api.telegram.org/bot{$connection->api_key}/sendMessage", [
-                'chat_id' => $connection->chat_id,
-                'text' => $message,
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('Failed to send Telegram notification', [
-                'domain_id' => $domain->id,
-                'error' => $e->getMessage(),
+        SendAlertJob::dispatch($domain->account_id, $domain->id, $message);
+    }
+
+    protected function openIncident(Domain $domain, ?string $before, string $after, ?string $error): void
+    {
+        DomainIncident::create([
+            'domain_id' => $domain->id,
+            'status_before' => $before,
+            'status_after' => $after,
+            'opened_at' => now(),
+            'message' => $error,
+        ]);
+    }
+
+    protected function closeIncident(Domain $domain): void
+    {
+        $incident = DomainIncident::where('domain_id', $domain->id)
+            ->whereNull('closed_at')
+            ->orderByDesc('opened_at')
+            ->first();
+
+        if ($incident) {
+            $incident->update([
+                'closed_at' => now(),
+                'status_after' => 'ok',
             ]);
         }
     }

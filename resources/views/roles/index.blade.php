@@ -112,7 +112,7 @@
                     </div>
                 </div>
                 @if($roles->hasPages())
-                <div class="card-footer">
+                <div class="card-footer py-2">
                     <div class="d-flex align-items-center justify-content-between flex-wrap">
                         <div class="mb-2 mb-sm-0">
                             <span class="text-muted">
@@ -120,7 +120,7 @@
                             </span>
                         </div>
                         <div>
-                            {{ $roles->links() }}
+                            {{ $roles->links('pagination::bootstrap-5') }}
                         </div>
                     </div>
                 </div>
