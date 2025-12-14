@@ -2,37 +2,11 @@
 
 @section('content')
 
-<style>
-    /* .uptime-bar {
-        min-height: 10px;
-        border: 1px solid purple;
-    } */
-    .uptime-seg {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-    }
-    .uptime-seg.up {
-        background-color: #32d484;
-    }
-    .uptime-seg.down {
-        background-color: #ff6757;
-    }
-    .uptime-seg.idle {
-        background-color: rgba(108, 117, 125, 0.5);
-    }
-   
-    i.ri-arrow-up-line, i.ri-arrow-down-line {
-     font-size: 2em;
-    }  
-   
-</style>
-<div class="row">
-    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <!-- Start::page-header -->
+    <div class="d-flex align-items-center justify-content-between mb-3 page-header-breadcrumb flex-wrap gap-2">
         <div>
-            <h5 class="mb-1">Domains</h5>
-            <p class="text-muted mb-0">Liveness & SSL status</p>
+            <h1 class="page-title fw-medium fs-20 mb-0">Domains</h1>
+            <p class="text-muted mb-0">Liveness &amp; SSL status</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDomainModal">
@@ -43,6 +17,22 @@
             </button>
         </div>
     </div>
+    <!-- End::page-header -->
+
+    <!-- Start::app-content -->
+    <div class="row row-sm mt-lg-4 mb-3">
+        <div class="col-sm-12 col-lg-12 col-xl-12">
+            <div class="card bg-primary custom-card card-box">
+                <div class="card-body p-4">
+                    <span class="text-fixed-white">NOTE:</span>
+                    <p class="text-fixed-white mt-2 mb-0">
+                        Domains share the same layout as the dashboard so navigation stays consistent. All actions still point to the Domains menu.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End::app-content -->
 
     <div id="alert-container"></div>
 
@@ -275,7 +265,7 @@
             {{ $domains->links('pagination::bootstrap-5') }}
         </div>
     </div>
-</div>
+
 <!-- Edit Domain Modal -->
 <div class="modal fade" id="editDomainModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -337,12 +327,14 @@
         min-height: 48px;
     }
     #alert-container{
-        
         z-index: 1080;
         position: sticky;
         top: 150px;
         max-width: 400px;
-        
+    }
+    i.ri-arrow-up-line,
+    i.ri-arrow-down-line {
+        font-size: 2em;
     }
    
 </style>

@@ -4,10 +4,10 @@
 				<!-- Start::main-sidebar-header -->
 				<div class="main-sidebar-header">
 					<a href="{{url('index')}}" class="header-logo">
-						<img src="{{asset('build/assets/images/brand-logos/desktop-logo.png')}}" alt="logo" class="desktop-logo">
-						<img src="{{ asset('img/2.jpg') }}" alt="logo" class="toggle-dark">
-						<img src="{{asset('build/assets/images/brand-logos/desktop-dark.png')}}" alt="logo" class="desktop-dark">
-						<img src="{{asset('build/assets/images/brand-logos/toggle-logo.png')}}" alt="logo" class="toggle-logo">
+						<img src="{{asset('img/logo.png')}}" alt="logo" class="desktop-logo">
+						<img src="{{ asset('img/2.png') }}" alt="logo" class="toggle-dark">
+						<img src="{{asset('img/logo.png')}}" alt="logo" class="desktop-dark">
+						<img src="{{asset('img/2.png')}}" alt="logo" class="toggle-logo">
 					</a>
 				</div>
 				<!-- End::main-sidebar-header -->
@@ -49,7 +49,10 @@
 										<span class="side-menu__label">Domains</span>
 										<i class="ri-arrow-right-s-line side-menu__angle"></i>
 									</a>
-									<ul class="slide-menu child1">
+									<ul class="slide-menu child2">
+										<li class="slide side-menu__label1">
+											<a href="javascript:void(0)">Domains</a>
+										</li>
 										<li class="slide {{ request()->is('domains') ? 'active' : '' }}">
 											<a href="{{ route('domains.index') }}" class="side-menu__item">Domains</a>
 										</li>

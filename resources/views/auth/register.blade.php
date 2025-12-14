@@ -6,7 +6,7 @@
         <div class="col-lg-6 col-md-8">
             <div class="text-center mb-4">
                 <a href="{{ url('index') }}">
-                    <img src="{{ asset('build/assets/images/brand-logos/desktop-dark.png') }}" alt="logo" height="48">
+                    <img src="{{ asset('img/logo.png') }}" alt="logo" height="48">
                 </a>
             </div>
             <div class="card custom-card">
