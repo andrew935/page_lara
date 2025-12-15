@@ -57,7 +57,8 @@ class SendAlertJob implements ShouldQueue
                 } elseif ($channel === 'slack' && $settings->slack_webhook_url) {
                     Http::timeout(5)->post($settings->slack_webhook_url, ['text' => $this->message]);
                 } elseif ($channel === 'telegram' && $settings->telegram_api_key && $settings->telegram_chat_id) {
-                    Http::timeout(5)->post("https://api.telegram.org/bot{$settings->telegram_api_key}/sendMessage", [
+                    // Match Telegram "GET with query params" style
+                    Http::timeout(5)->get("https://api.telegram.org/bot{$settings->telegram_api_key}/sendMessage", [
                         'chat_id' => $settings->telegram_chat_id,
                         'text' => $this->message,
                     ]);

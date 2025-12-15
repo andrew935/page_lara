@@ -50,6 +50,7 @@ class CheckDomainJob implements ShouldQueue
             $payload['status_since'] = now();
             if ($result['status'] === 'ok') {
                 $payload['last_up_at'] = now();
+                $payload['down_notified_at'] = null; // reset so next down can notify again
             } elseif ($result['status'] === 'down') {
                 $payload['last_down_at'] = now();
             }
@@ -57,24 +58,35 @@ class CheckDomainJob implements ShouldQueue
 
         $domain->update($payload);
 
-        if ($oldStatus !== 'down' && $result['status'] === 'down') {
-            $this->openIncident($domain, $oldStatus, $result['status'], $result['error']);
-            $this->notifyDown($domain, $result['error']);
-        } elseif ($oldStatus === 'down' && $result['status'] === 'ok') {
+        $domain->refresh();
+
+        if ($oldStatus !== 'down' && $domain->status === 'down') {
+            $this->openIncident($domain, $oldStatus, $domain->status, $domain->last_check_error);
+        } elseif ($oldStatus === 'down' && $domain->status === 'ok') {
             $this->closeIncident($domain);
+        }
+
+        // Notify (Telegram/email/slack) ONLY if:
+        // - still down for at least 3 minutes
+        // - and we haven't already notified during this down period
+        if (
+            $domain->status === 'down'
+            && !$domain->down_notified_at
+            && $domain->status_since
+            && $domain->status_since->lte(now()->subMinutes(3))
+        ) {
+            $minutes = $domain->status_since->diffInMinutes(now());
+            $message = "Domain {$domain->domain} is DOWN for {$minutes} minute(s)";
+            $this->notifyDown($domain, $message);
+            $domain->update(['down_notified_at' => now()]);
         }
     }
 
-    protected function notifyDown(Domain $domain, ?string $error): void
+    protected function notifyDown(Domain $domain, string $message): void
     {
         $settings = NotificationSetting::where('account_id', $domain->account_id)->first();
         if (!$settings || !$settings->notify_on_fail) {
             return;
-        }
-
-        $message = "Domain {$domain->domain} is DOWN";
-        if ($error) {
-            $message .= " — {$error}";
         }
 
         SendAlertJob::dispatch($domain->account_id, $domain->id, $message);

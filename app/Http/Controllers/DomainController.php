@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Domains\Services\DomainService;
 use App\Jobs\ProcessImportBatchJob;
 use App\Jobs\CheckDomainJob;
-use App\Jobs\SendAlertJob;
 use App\Models\Domain;
 use App\Services\DomainCheckService;
 use App\Support\AccountResolver;
@@ -91,31 +90,6 @@ class DomainController extends Controller
         $job->handle($checker);
 
         $domain->refresh();
-
-        // If Telegram is enabled & configured, send a manual-check notification.
-        $settings = \App\Notifications\NotificationSetting::where('account_id', $account->id)->first();
-        if (
-            $settings
-            && $settings->notify_on_fail
-            && $settings->telegram_api_key
-            && $settings->telegram_chat_id
-        ) {
-            $statusLabel = match ($domain->status) {
-                'ok' => 'UP',
-                'down' => 'DOWN',
-                'pending' => 'PENDING',
-                default => strtoupper((string) $domain->status),
-            };
-            $sslLabel = $domain->ssl_valid === null ? 'UNKNOWN' : ($domain->ssl_valid ? 'VALID' : 'INVALID');
-            $checkedAt = $domain->last_checked_at ? $domain->last_checked_at->toDateTimeString() : '—';
-            $msg = "Manual check: {$domain->domain}\nStatus: {$statusLabel}\nSSL: {$sslLabel}\nChecked: {$checkedAt}";
-            if ($domain->last_check_error) {
-                $msg .= "\nError: {$domain->last_check_error}";
-            }
-
-            // Send only via Telegram, but keep "enabled" requirement.
-            SendAlertJob::dispatch($account->id, $domain->id, $msg, true, ['telegram']);
-        }
 
         if (request()->expectsJson()) {
             return response()->json([

@@ -195,31 +195,13 @@
                                         $lastUp = $domain->last_up_at ? $domain->last_up_at->diffForHumans() : '—';
                                         $lastDown = $domain->last_down_at ? $domain->last_down_at->diffForHumans() : '—';
                                         $errMsg = $domain->last_check_error ?? '—';
-                                        $segments = [];
-                                        // Basic bar: if down -> first red rest gray, if up -> all green, pending/error -> gray
-                                        if ($domain->status === 'down') {
-                                            $segments = array_merge(['down'], array_fill(1, 11, 'idle'));
-                                        } elseif ($domain->status === 'ok') {
-                                            $segments = array_fill(0, 12, 'up');
-                                        } else {
-                                            $segments = array_fill(0, 12, 'idle');
-                                        }
                                         $history = $domain->lastcheck ?? ($domain->history ?? []);
-                                        $segments = array_slice($history, -12);
+                                        $segments = array_slice(is_array($history) ? $history : [], -12);
                                         $segments = array_map(function ($v) {
                                             if ($v === 1 || $v === 'up') return 'up';
                                             if ($v === 0 || $v === 2 || $v === 'down') return 'down';
                                             return 'idle';
                                         }, $segments);
-                                        if (empty($segments)) {
-                                            if ($domain->status === 'down') {
-                                                $segments = array_merge(['down'], array_fill(1, 11, 'idle'));
-                                            } elseif ($domain->status === 'ok') {
-                                                $segments = array_fill(0, 12, 'up');
-                                            } else {
-                                                $segments = array_fill(0, 12, 'idle');
-                                            }
-                                        }
                                     @endphp
                                     <div class="d-flex align-items-start gap-2">
                                         <span class="{{ $isDown ? 'text-danger' : 'text-success' }}" data-bs-toggle="tooltip" title="{{ $errMsg }}">
@@ -234,18 +216,20 @@
                                                 @endif
                                             </small>
 
-                                            <div class="uptime-bar d-flex gap-1 mt-1">
-                                                @foreach($segments as $seg)
-                                                    @php
-                                                        $cls = match ($seg) {
-                                                            'up' => 'up',
-                                                            'down' => 'down',
-                                                            default => 'idle',
-                                                        };
-                                                    @endphp
-                                                <span class="uptime-seg {{ $cls }}"></span>
-                                                @endforeach
-                                            </div>
+                                            @if(!empty($segments))
+                                                <div class="uptime-bar d-flex gap-1 mt-1">
+                                                    @foreach($segments as $seg)
+                                                        @php
+                                                            $cls = match ($seg) {
+                                                                'up' => 'up',
+                                                                'down' => 'down',
+                                                                default => 'idle',
+                                                            };
+                                                        @endphp
+                                                    <span class="uptime-seg {{ $cls }}"></span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -504,19 +488,12 @@
             let segments = history
                 .slice(-12)
                 .map(v => v === 1 || v === 'up' ? 'up' : ((v === 0 || v === 2 || v === 'down') ? 'down' : 'idle'));
-            if (!segments.length) {
-                if (domain.status === 'down') {
-                    segments = ['down', ...Array(11).fill('idle')];
-                } else if (domain.status === 'ok') {
-                    segments = Array(12).fill('up');
-                } else {
-                    segments = Array(12).fill('idle');
-                }
-            }
-            const segHtml = segments.map(seg => {
-                const cls = seg === 'up' ? 'up' : (seg === 'down' ? 'down' : 'idle');
-                return `<span class="uptime-seg ${cls}"></span>`;
-            }).join('');
+            const segHtml = segments.length
+                ? segments.map(seg => {
+                    const cls = seg === 'up' ? 'up' : (seg === 'down' ? 'down' : 'idle');
+                    return `<span class="uptime-seg ${cls}"></span>`;
+                }).join('')
+                : '';
 
             err.innerHTML = `
                 <div class="d-flex align-items-start gap-2">
@@ -530,9 +507,7 @@
                                 : `Up since ${downSince}<br>last down ${lastDown}`
                             }
                         </small>
-                        <div class="uptime-bar d-flex gap-1 mt-1">
-                            ${segHtml}
-                        </div>
+                        ${segHtml ? `<div class="uptime-bar d-flex gap-1 mt-1">${segHtml}</div>` : ``}
                     </div>
                 </div>
             `;
@@ -551,10 +526,24 @@
             body: JSON.stringify(body),
         });
         if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || 'Request failed');
+            // Prefer a clean message from JSON; avoid showing raw HTML/stack traces in UI.
+            let msg = 'Request failed';
+            try {
+                const data = await res.json();
+                msg = data?.message || msg;
+            } catch (e) {
+                const text = await res.text();
+                if (text && typeof text === 'string') {
+                    msg = (text.includes('<!DOCTYPE') || text.includes('<html')) ? 'Request failed' : text;
+                }
+            }
+            throw new Error(msg);
         }
-        return res.json();
+        try {
+            return await res.json();
+        } catch (e) {
+            throw new Error('Unexpected response from server.');
+        }
     }
 
     // Add domains
@@ -609,10 +598,14 @@
             const url = routes.checkOne(id);
             const data = await postJson(url);
             if (data.domain) updateRow(data.domain);
-            showAlert('success', data.message || 'Domain checked successfully.');
+            showAlert('success', 'Domain checked.');
             initTooltips();
         } catch (err) {
-            showAlert('danger', err.message || 'Error checking domain.');
+            const raw = (err && err.message) ? String(err.message) : '';
+            const safeMsg = raw && raw.length < 200 && !raw.includes('api.telegram.org')
+                ? raw
+                : 'Error checking domain.';
+            showAlert('danger', safeMsg);
         } finally {
             btn.disabled = false;
         }

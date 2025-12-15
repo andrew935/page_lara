@@ -8,6 +8,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TelegramConnectionController;
+use App\Http\Controllers\TelegramLogController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\DomainSettingsController;
 
@@ -33,6 +34,8 @@ Route::middleware('auth')->group(function () {
     // Connections
     Route::get('connections/telegram', [TelegramConnectionController::class, 'edit'])->name('connections.telegram.edit');
     Route::post('connections/telegram', [TelegramConnectionController::class, 'update'])->name('connections.telegram.update');
+    Route::post('connections/telegram/test', [TelegramConnectionController::class, 'test'])->name('connections.telegram.test');
+    Route::get('connections/telegram/logs', [TelegramLogController::class, 'index'])->name('connections.telegram.logs');
 
     // Domains
     Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
