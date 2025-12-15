@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::post('domains/ingest', [DomainController::class, 'ingest'])->name('domains.ingest');
     Route::post('domains/check-all', [DomainController::class, 'checkAll'])->name('domains.checkAll');
     Route::post('domains/{domain}/check', [DomainController::class, 'check'])->name('domains.check');
+    Route::post('domains/{domain}/check-now', [DomainController::class, 'checkNow'])->name('domains.checkNow');
     Route::put('domains/{domain}', [DomainController::class, 'update'])->name('domains.update');
     Route::delete('domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
     Route::post('domains/delete-all', [DomainController::class, 'deleteAll'])->name('domains.deleteAll');

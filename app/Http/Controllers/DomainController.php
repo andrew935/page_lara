@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Domains\Services\DomainService;
 use App\Jobs\ProcessImportBatchJob;
+use App\Jobs\CheckDomainJob;
+use App\Jobs\SendAlertJob;
 use App\Models\Domain;
+use App\Services\DomainCheckService;
 use App\Support\AccountResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -17,10 +20,10 @@ class DomainController extends Controller
         $domains = Domain::where('account_id', $account->id)
             ->orderByRaw("CASE 
                 WHEN status = 'down' THEN 0 
-                WHEN status = 'pending' THEN 1 
-                WHEN status = 'error' THEN 2 
+                WHEN status = 'ok' THEN 1 
+                WHEN status = 'pending' THEN 2 
                 ELSE 3 END")
-            ->orderBy('domain')
+            ->orderByDesc('id')
             ->paginate(25);
         $total = Domain::where('account_id', $account->id)->count();
         $up = Domain::where('account_id', $account->id)->where('status', 'ok')->count();
@@ -74,6 +77,54 @@ class DomainController extends Controller
         }
 
         return redirect()->route('domains.index')->with('success', "Queued check for {$domain->domain}.");
+    }
+
+    public function checkNow(Domain $domain, DomainService $service, DomainCheckService $checker)
+    {
+        $account = AccountResolver::current();
+        if ($domain->account_id && $domain->account_id !== $account->id) {
+            abort(404);
+        }
+
+        // Run the same logic as the queued job, but synchronously.
+        $job = new CheckDomainJob($domain->id);
+        $job->handle($checker);
+
+        $domain->refresh();
+
+        // If Telegram is enabled & configured, send a manual-check notification.
+        $settings = \App\Notifications\NotificationSetting::where('account_id', $account->id)->first();
+        if (
+            $settings
+            && $settings->notify_on_fail
+            && $settings->telegram_api_key
+            && $settings->telegram_chat_id
+        ) {
+            $statusLabel = match ($domain->status) {
+                'ok' => 'UP',
+                'down' => 'DOWN',
+                'pending' => 'PENDING',
+                default => strtoupper((string) $domain->status),
+            };
+            $sslLabel = $domain->ssl_valid === null ? 'UNKNOWN' : ($domain->ssl_valid ? 'VALID' : 'INVALID');
+            $checkedAt = $domain->last_checked_at ? $domain->last_checked_at->toDateTimeString() : '—';
+            $msg = "Manual check: {$domain->domain}\nStatus: {$statusLabel}\nSSL: {$sslLabel}\nChecked: {$checkedAt}";
+            if ($domain->last_check_error) {
+                $msg .= "\nError: {$domain->last_check_error}";
+            }
+
+            // Send only via Telegram, but keep "enabled" requirement.
+            SendAlertJob::dispatch($account->id, $domain->id, $msg, true, ['telegram']);
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message' => "Checked {$domain->domain}.",
+                'domain' => $service->mapDomain($domain),
+            ]);
+        }
+
+        return redirect()->route('domains.index')->with('success', "Checked {$domain->domain}.");
     }
 
     public function checkAll(DomainService $service)
@@ -138,7 +189,7 @@ class DomainController extends Controller
     /**
      * Basic update for domain fields (campaign)
      */
-    public function update(Request $request, Domain $domain)
+    public function update(Request $request, Domain $domain, DomainService $service)
     {
         $account = AccountResolver::current();
         if ($domain->account_id && $domain->account_id !== $account->id) {
@@ -146,6 +197,7 @@ class DomainController extends Controller
         }
 
         $data = $request->validate([
+            'domain' => ['required', 'string', 'max:255', 'unique:domains,domain,' . $domain->id],
             'campaign' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -154,7 +206,7 @@ class DomainController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Domain updated.',
-                'domain' => $this->mapDomain($domain->fresh()),
+                'domain' => $service->mapDomain($domain->fresh()),
             ]);
         }
 

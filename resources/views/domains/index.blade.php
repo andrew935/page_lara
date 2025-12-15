@@ -2,6 +2,38 @@
 
 @section('content')
 
+    <style>
+        .uptime-bar{
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .uptime-seg.down {
+            
+            background-color: red;
+        }
+        .uptime-seg.up {
+            
+            background-color: #32d484;
+        }
+        .uptime-seg {
+            width: 5px;
+        }
+        .uptime-bar .up{
+            background-color: #32d484;
+            min-width: 5px;
+        }
+        .uptime-bar .down{
+ 
+            background-color: #ff6757;
+            min-width: 5px;
+        }
+        .uptime-bar .idle{
+            background-color: #6c7e96;
+            min-width: 5px;
+        }
+    </style>
+
     <!-- Start::page-header -->
     <div class="d-flex align-items-center justify-content-between mb-3 page-header-breadcrumb flex-wrap gap-2">
         <div>
@@ -18,21 +50,6 @@
         </div>
     </div>
     <!-- End::page-header -->
-
-    <!-- Start::app-content -->
-    <div class="row row-sm mt-lg-4 mb-3">
-        <div class="col-sm-12 col-lg-12 col-xl-12">
-            <div class="card bg-primary custom-card card-box">
-                <div class="card-body p-4">
-                    <span class="text-fixed-white">NOTE:</span>
-                    <p class="text-fixed-white mt-2 mb-0">
-                        Domains share the same layout as the dashboard so navigation stays consistent. All actions still point to the Domains menu.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- End::app-content -->
 
     <div id="alert-container"></div>
 
@@ -145,8 +162,8 @@
                     <tbody>
                         @forelse($domains as $domain)
                             <tr data-domain-id="{{ $domain->id }}">
-                                <td>{{ $domain->domain }}</td>
-                                <td>
+                                <td class="col-domain">{{ $domain->domain }}</td>
+                                <td class="col-status">
                                     @if($domain->status === 'ok')
                                         <span class="badge bg-success">Up</span>
                                     @elseif($domain->status === 'down')
@@ -157,7 +174,7 @@
                                         <span class="badge bg-warning text-dark">Error</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="col-ssl">
                                     @if(is_null($domain->ssl_valid))
                                         <span class="badge bg-secondary">Unknown</span>
                                     @elseif($domain->ssl_valid)
@@ -166,12 +183,12 @@
                                         <span class="badge bg-danger">Invalid</span>
                                     @endif
                                 </td>
-                                <td>{{ $domain->last_checked_at ? $domain->last_checked_at->diffForHumans() : '—' }}</td>
+                                <td class="col-checked">{{ $domain->last_checked_at ? $domain->last_checked_at->diffForHumans() : '—' }}</td>
                                 <td class="col-campaign text-truncate" style="max-width:180px;">
                                     {{ $domain->campaign ?? '—' }}
                                 </td>
                                
-                                <td class="text-truncate" style="max-width: 360px;">
+                                <td class="col-error" style="max-width: 360px;">
                                     @php
                                         $isDown = $domain->status === 'down';
                                         $downSince = $domain->status_since?->diffForHumans() ?? '—';
@@ -187,8 +204,13 @@
                                         } else {
                                             $segments = array_fill(0, 12, 'idle');
                                         }
-                                        $history = $domain->history ?? [];
+                                        $history = $domain->lastcheck ?? ($domain->history ?? []);
                                         $segments = array_slice($history, -12);
+                                        $segments = array_map(function ($v) {
+                                            if ($v === 1 || $v === 'up') return 'up';
+                                            if ($v === 0 || $v === 2 || $v === 'down') return 'down';
+                                            return 'idle';
+                                        }, $segments);
                                         if (empty($segments)) {
                                             if ($domain->status === 'down') {
                                                 $segments = array_merge(['down'], array_fill(1, 11, 'idle'));
@@ -228,7 +250,10 @@
                                     </div>
                                 </td>
                                 <td class="text-end" style="min-width: 140px; white-space: nowrap; padding: 8px;">
-                                    <div class="btn-group" role="group">
+                                    <div class="btn-group gap-1" role="group">
+                                        <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="{{ $domain->id }}" title="Check this domain">
+                                            <i class="ri-search-line me-1"></i> Check
+                                        </button>
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-domain"
                                                 data-domain-id="{{ $domain->id }}"
                                                 data-domain="{{ $domain->domain }}"
@@ -243,9 +268,6 @@
                                                 <i class="ri-delete-bin-line"></i>
                                             </button>
                                         </form>
-                                        <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="{{ $domain->id }}" title="Check this domain">
-                                            <i class="ri-search-line me-1"></i> Check
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -349,7 +371,7 @@
         store: @json(route('domains.store')),
         checkAll: @json(route('domains.checkAll')),
         checkOne: function(id) {
-            return `${checkBase}/${id}/check`;
+            return `${checkBase}/${id}/check-now`;
         },
     };
 
@@ -434,7 +456,10 @@
                 <td class="col-campaign text-truncate" style="max-width:180px;"></td>
                 <td class="col-error text-truncate" style="max-width:250px;"></td>
                 <td class="text-end" style="min-width: 140px; white-space: nowrap; padding: 8px;">
-                    <div class="btn-group" role="group">
+                    <div class="btn-group gap-1" role="group">
+                        <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="${domain.id}" title="Check this domain">
+                            <i class="ri-search-line me-1"></i> Check
+                        </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-domain"
                             data-domain-id="${domain.id}" data-domain="${domain.domain ?? ''}" data-campaign="${domain.campaign ?? ''}"
                             title="Edit domain">
@@ -442,9 +467,6 @@
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm btn-delete-domain" data-domain-id="${domain.id}" title="Delete domain">
                             <i class="ri-delete-bin-line"></i>
-                        </button>
-                        <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="${domain.id}" title="Check this domain">
-                            <i class="ri-search-line me-1"></i> Check
                         </button>
                     </div>
                 </td>
@@ -474,8 +496,14 @@
             const lastUp = domain.last_up_at ?? '—';
             const lastDown = domain.last_down_at ?? '—';
             const errMsg = domain.error ?? '—';
-            const history = Array.isArray(domain.history) ? domain.history : [];
-            let segments = history.slice(-12);
+            const history = Array.isArray(domain.lastcheck)
+                ? domain.lastcheck
+                : (Array.isArray(domain.history) ? domain.history : []);
+
+            // Normalize history to uptime segments (last 12).
+            let segments = history
+                .slice(-12)
+                .map(v => v === 1 || v === 'up' ? 'up' : ((v === 0 || v === 2 || v === 'down') ? 'down' : 'idle'));
             if (!segments.length) {
                 if (domain.status === 'down') {
                     segments = ['down', ...Array(11).fill('idle')];
@@ -498,8 +526,8 @@
                     <div class="w-100">
                         <small class="text-muted d-block">
                             ${isDown
-                                ? `Down since ${downSince}; last up ${lastUp}`
-                                : `Up since ${downSince}; last down ${lastDown}`
+                                ? `Down since ${downSince}<br>last up ${lastUp}`
+                                : `Up since ${downSince}<br>last down ${lastDown}`
                             }
                         </small>
                         <div class="uptime-bar d-flex gap-1 mt-1">

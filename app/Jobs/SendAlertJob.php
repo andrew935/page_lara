@@ -24,7 +24,9 @@ class SendAlertJob implements ShouldQueue
     public function __construct(
         public int $accountId,
         public int $domainId,
-        public string $message
+        public string $message,
+        public bool $force = false,
+        public ?array $channelsOverride = null
     ) {
     }
 
@@ -33,11 +35,11 @@ class SendAlertJob implements ShouldQueue
         $settings = NotificationSetting::where('account_id', $this->accountId)->first();
         $domain = Domain::find($this->domainId);
 
-        if (!$settings || !$settings->notify_on_fail || !$domain) {
+        if (!$settings || (!$settings->notify_on_fail && !$this->force) || !$domain) {
             return;
         }
 
-        $channels = $settings->channels ?? [];
+        $channels = $this->channelsOverride ?? ($settings->channels ?? []);
         if (empty($channels)) {
             $channels = ['telegram'];
         }

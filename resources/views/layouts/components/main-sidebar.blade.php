@@ -36,32 +36,14 @@
 									<li class="slide side-menu__label1">
 										<a href="javascript:void(0)">Dashboards</a>
 									</li>
-									<li class="slide {{ request()->is('index') ? 'active' : '' }}">
-										<a href="{{url('index')}}" class="side-menu__item"> 
-											<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M54.46,201.54c-9.2-9.2-3.1-28.53-7.78-39.85C41.82,150,24,140.5,24,128s17.82-22,22.68-33.69C51.36,83,45.26,63.66,54.46,54.46S83,51.36,94.31,46.68C106.05,41.82,115.5,24,128,24S150,41.82,161.69,46.68c11.32,4.68,30.65-1.42,39.85,7.78s3.1,28.53,7.78,39.85C214.18,106.05,232,115.5,232,128S214.18,150,209.32,161.69c-4.68,11.32,1.42,30.65-7.78,39.85s-28.53,3.1-39.85,7.78C150,214.18,140.5,232,128,232s-22-17.82-33.69-22.68C83,204.64,63.66,210.74,54.46,201.54Z" opacity="0.2"/><path d="M54.46,201.54c-9.2-9.2-3.1-28.53-7.78-39.85C41.82,150,24,140.5,24,128s17.82-22,22.68-33.69C51.36,83,45.26,63.66,54.46,54.46S83,51.36,94.31,46.68C106.05,41.82,115.5,24,128,24S150,41.82,161.69,46.68c11.32,4.68,30.65-1.42,39.85,7.78s3.1,28.53,7.78,39.85C214.18,106.05,232,115.5,232,128S214.18,150,209.32,161.69c-4.68,11.32,1.42,30.65-7.78,39.85s-28.53,3.1-39.85,7.78C150,214.18,140.5,232,128,232s-22-17.82-33.69-22.68C83,204.64,63.66,210.74,54.46,201.54Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="96" cy="96" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="160" cy="160" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="88" y1="168" x2="168" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-											Sales</a>
+									<li class="slide {{ request()->is('domains') ? 'active' : '' }}">
+										<a href="{{ route('domains.index') }}" class="side-menu__item">Domains</a>
+									</li>
+									<li class="slide {{ request()->is('domains/settings') ? 'active' : '' }}">
+										<a href="{{ route('domains.settings.edit') }}" class="side-menu__item">Domains Settings</a>
 									</li>
 								</ul>
-								<!-- Start::slide -->
-								<li class="slide has-sub {{ request()->is('domains*') ? 'active open' : '' }}">
-									<a href="javascript:void(0);" class="side-menu__item">
-										<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="128" r="96" opacity="0.2"/><circle cx="128" cy="128" r="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="37.5" y1="96" x2="218.5" y2="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="37.5" y1="160" x2="218.5" y2="160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="128" cy="128" r="32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-										<span class="side-menu__label">Domains</span>
-										<i class="ri-arrow-right-s-line side-menu__angle"></i>
-									</a>
-									<ul class="slide-menu child2">
-										<li class="slide side-menu__label1">
-											<a href="javascript:void(0)">Domains</a>
-										</li>
-										<li class="slide {{ request()->is('domains') ? 'active' : '' }}">
-											<a href="{{ route('domains.index') }}" class="side-menu__item">Domains</a>
-										</li>
-										<li class="slide {{ request()->is('domains/settings') ? 'active' : '' }}">
-											<a href="{{ route('domains.settings.edit') }}" class="side-menu__item">Settings</a>
-										</li>
-									</ul>
-								</li>
-								<!-- End::slide -->
+								 
 							</li>
 							<!-- End::slide -->
 

@@ -15,7 +15,12 @@ class DomainApiController extends Controller
     {
         $account = AccountResolver::current();
         $domains = Domain::where('account_id', $account->id)
-            ->orderBy('domain')
+            ->orderByRaw("CASE 
+                WHEN status = 'down' THEN 0 
+                WHEN status = 'ok' THEN 1 
+                WHEN status = 'pending' THEN 2 
+                ELSE 3 END")
+            ->orderByDesc('id')
             ->paginate(25);
 
         return response()->json($domains);
