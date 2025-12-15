@@ -61,7 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['email' => 'admin@aol.com'],
             [
                 'name' => 'Admin User',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Aa123123'),
             ]
         );
         $admin->syncRoles(['Admin']);
@@ -70,7 +70,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['email' => 'manager@aol.com'],
             [
                 'name' => 'Manager User',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Aa121212'),
             ]
         );
         $manager->syncRoles(['Manager']);
@@ -79,7 +79,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['email' => 'user@aol.com'],
             [
                 'name' => 'Regular User',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('Aa121212'),
             ]
         );
         $regularUser->syncRoles(['User']);
