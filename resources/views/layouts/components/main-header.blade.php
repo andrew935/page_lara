@@ -53,9 +53,15 @@
 						<li class="header-element dropdown">
 							<!-- Start::header-link|dropdown-toggle -->
 							<a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-								<div>
-									<img src="{{asset('build/assets/images/faces/12.jpg')}}" alt="img" class="header-link-icon">
-								</div>
+								@php
+									$userName = optional(auth()->user())->name;
+									$initials = $userName
+										? mb_strtoupper(mb_substr(preg_replace('/\s+/', '', $userName), 0, 2))
+										: 'US';
+								@endphp
+								<span class="d-inline-flex align-items-center justify-content-center avatar avatar-sm avatar-rounded bg-primary text-white fw-bold">
+									{{ $initials }}
+								</span>
 							</a>
 							<!-- End::header-link|dropdown-toggle -->
 							<div class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile">
