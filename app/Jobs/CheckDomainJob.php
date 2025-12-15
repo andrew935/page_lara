@@ -42,6 +42,10 @@ class CheckDomainJob implements ShouldQueue
             'last_check_error' => $result['error'],
         ];
 
+        $history = is_array($domain->lastcheck) ? $domain->lastcheck : [];
+        $history[] = $result['status'] === 'ok' ? 1 : 0;
+        $payload['lastcheck'] = array_slice($history, -24);
+
         if ($oldStatus !== $result['status']) {
             $payload['status_since'] = now();
             if ($result['status'] === 'ok') {

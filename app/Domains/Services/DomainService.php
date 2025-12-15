@@ -46,6 +46,7 @@ class DomainService
                     'status' => 'pending',
                     'ssl_valid' => null,
                     'last_check_error' => null,
+                    'lastcheck' => [],
                 ]
             );
 
@@ -108,6 +109,7 @@ class DomainService
                     'status' => 'pending',
                     'ssl_valid' => null,
                     'last_check_error' => null,
+                    'lastcheck' => [],
                 ]
             );
             $created++;
@@ -153,6 +155,7 @@ class DomainService
                     'status' => 'pending',
                     'ssl_valid' => null,
                     'last_check_error' => null,
+                    'lastcheck' => [],
                 ]
             );
 
@@ -192,6 +195,7 @@ class DomainService
             'last_up_at' => $domain->last_up_at ? $domain->last_up_at->toDateTimeString() : null,
             'last_down_at' => $domain->last_down_at ? $domain->last_down_at->toDateTimeString() : null,
             'error' => $domain->last_check_error,
+            'lastcheck' => $domain->lastcheck ?? [],
         ];
     }
 

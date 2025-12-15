@@ -20,6 +20,7 @@ class Domain extends Model
         'ssl_valid',
         'last_checked_at',
         'last_check_error',
+        'lastcheck',
     ];
 
     protected $casts = [
@@ -28,6 +29,7 @@ class Domain extends Model
         'last_up_at' => 'datetime',
         'last_down_at' => 'datetime',
         'ssl_valid' => 'boolean',
+        'lastcheck' => 'array',
     ];
 }
 
