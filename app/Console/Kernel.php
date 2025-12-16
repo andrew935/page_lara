@@ -12,8 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Run scheduler frequently; per-account intervals enforced in command
-        $schedule->command('monitoring:schedule-checks')->everyFiveMinutes();
+        // Run scheduler every minute; per-account intervals enforced in command
+        $schedule->command('monitoring:schedule-checks')->everyMinute();
     }
 
     /**

@@ -85,3 +85,13 @@ docker compose exec app php artisan migrate --force
 
 Open the app at `http://localhost:8000`.
 
+### Automatic checks (interval)
+
+- The interval in **Domains → Settings → “Check interval (minutes)”** is used by the scheduler.
+- In Docker, the `scheduler` service runs `php artisan schedule:work` automatically.
+- On a VPS (no Docker scheduler), add a cron:
+
+```bash
+* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
+```
+

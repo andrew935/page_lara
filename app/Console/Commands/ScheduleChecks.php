@@ -6,6 +6,7 @@ use App\Billing\Services\PlanRulesService;
 use App\Identity\Account;
 use App\Jobs\CheckDomainJob;
 use App\Models\Domain;
+use App\Models\DomainSetting;
 use App\Monitoring\CheckBatch;
 use Illuminate\Console\Command;
 
@@ -19,7 +20,10 @@ class ScheduleChecks extends Command
     {
         $accounts = Account::all();
         foreach ($accounts as $account) {
-            $interval = $planRules->checkIntervalMinutes($account);
+            $planInterval = (int) $planRules->checkIntervalMinutes($account);
+            $settingsInterval = (int) (DomainSetting::where('account_id', $account->id)->value('check_interval_minutes') ?? 0);
+            // Enforce plan minimum interval (can't check more frequently than plan allows).
+            $interval = $settingsInterval > 0 ? max($planInterval, $settingsInterval) : $planInterval;
             $latestBatch = CheckBatch::where('account_id', $account->id)
                 ->orderByDesc('created_at')
                 ->first();
