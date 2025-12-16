@@ -59,3 +59,29 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Docker (Nginx + PHP-FPM + MySQL)
+
+### First-time setup
+
+1) Copy the Docker env file:
+
+```bash
+cp docker/env.docker.example docker/env.docker
+```
+
+2) Build & start:
+
+```bash
+docker compose up -d --build
+```
+
+3) Install app key + run migrations (first time):
+
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --force
+```
+
+Open the app at `http://localhost:8000`.
+

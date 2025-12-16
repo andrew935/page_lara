@@ -1,0 +1,14 @@
+.git
+.idea
+.vscode
+.env
+node_modules
+vendor
+storage
+bootstrap/cache/*.php
+npm-debug.log
+yarn-error.log
+docker/mysql
+
+
+
