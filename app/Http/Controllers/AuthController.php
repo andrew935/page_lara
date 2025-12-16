@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('index'));
+            return redirect()->intended(route('domains.index'));
         }
 
         return back()->withErrors([
@@ -66,13 +66,12 @@ class AuthController extends Controller
         ]);
 
         // Assign default "User" role if it exists.
-        if (Role::where('name', 'User')->exists()) {
-            $user->assignRole('User');
-        }
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $user->assignRole($userRole);
 
         Auth::login($user);
 
-        return redirect()->route('index');
+        return redirect()->route('domains.index');
     }
 
     /**

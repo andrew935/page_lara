@@ -24,7 +24,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Don't run Laravel composer scripts at build time (they call `artisan` before app files are copied).
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 COPY . .
 
@@ -33,7 +34,7 @@ RUN chown -R www-data:www-data /var/www \
     && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 9000
 

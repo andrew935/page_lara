@@ -64,34 +64,34 @@
 						<li class="slide__category"><span class="category-name">Administration</span></li>
 						<!-- End::slide__category -->
 
-						
+						@role('Admin')
+							<!-- Start::slide -->
+							<li class="slide {{ request()->is('users*') ? 'active' : '' }}">
+								<a href="{{ route('users.index') }}" class="side-menu__item">
+									<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="96" r="64" opacity="0.2"/><circle cx="128" cy="96" r="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M30.989,215.99064a112.03731,112.03731,0,0,1,194.02311.002" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+									<span class="side-menu__label">Users</span>
+								</a>
+							</li>
+							<!-- End::slide -->
 
-						<!-- Start::slide -->
-						<li class="slide {{ request()->is('users*') ? 'active' : '' }}">
-							<a href="{{ route('users.index') }}" class="side-menu__item">
-								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="96" r="64" opacity="0.2"/><circle cx="128" cy="96" r="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M30.989,215.99064a112.03731,112.03731,0,0,1,194.02311.002" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								<span class="side-menu__label">Users</span>
-							</a>
-						</li>
-						<!-- End::slide -->
+							<!-- Start::slide -->
+							<li class="slide {{ request()->is('roles*') ? 'active' : '' }}">
+								<a href="{{ route('roles.index') }}" class="side-menu__item">
+									<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="88" cy="108" r="52" opacity="0.2"/><circle cx="88" cy="108" r="52" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M155.41251,57.937A52.00595,52.00595,0,1,1,169.52209,160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M15.99613,197.39669a88.01736,88.01736,0,0,1,143.97535.00389" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M169.52209,160a87.89491,87.89491,0,0,1,72.00032,37.3912" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+									<span class="side-menu__label">Roles</span>
+								</a>
+							</li>
+							<!-- End::slide -->
 
-						<!-- Start::slide -->
-						<li class="slide {{ request()->is('roles*') ? 'active' : '' }}">
-							<a href="{{ route('roles.index') }}" class="side-menu__item">
-								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="88" cy="108" r="52" opacity="0.2"/><circle cx="88" cy="108" r="52" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M155.41251,57.937A52.00595,52.00595,0,1,1,169.52209,160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M15.99613,197.39669a88.01736,88.01736,0,0,1,143.97535.00389" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M169.52209,160a87.89491,87.89491,0,0,1,72.00032,37.3912" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								<span class="side-menu__label">Roles</span>
-							</a>
-						</li>
-						<!-- End::slide -->
-
-						<!-- Start::slide -->
-						<li class="slide {{ request()->is('permissions*') ? 'active' : '' }}">
-							<a href="{{ route('permissions.index') }}" class="side-menu__item">
-								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M128,216S24,160,24,80A24,24,0,0,1,48,56c16,0,24,8,40,8s32-16,40-16,24,8,40,8,24-8,40-8a24,24,0,0,1,24,24c0,80-104,136-104,136Z" opacity="0.2"/><path d="M128,216S24,160,24,80A24,24,0,0,1,48,56c16,0,24,8,40,8s32-16,40-16,24,8,40,8,24-8,40-8a24,24,0,0,1,24,24c0,80-104,136-104,136Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								<span class="side-menu__label">Permissions</span>
-							</a>
-						</li>
-						<!-- End::slide -->
+							<!-- Start::slide -->
+							<li class="slide {{ request()->is('permissions*') ? 'active' : '' }}">
+								<a href="{{ route('permissions.index') }}" class="side-menu__item">
+									<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M128,216S24,160,24,80A24,24,0,0,1,48,56c16,0,24,8,40,8s32-16,40-16,24,8,40,8,24-8,40-8a24,24,0,0,1,24,24c0,80-104,136-104,136Z" opacity="0.2"/><path d="M128,216S24,160,24,80A24,24,0,0,1,48,56c16,0,24,8,40,8s32-16,40-16,24,8,40,8,24-8,40-8a24,24,0,0,1,24,24c0,80-104,136-104,136Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+									<span class="side-menu__label">Permissions</span>
+								</a>
+							</li>
+							<!-- End::slide -->
+						@endrole
 
                         
 

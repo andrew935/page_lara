@@ -51,7 +51,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'permission-list',
         ]);
 
-        $userRole = Role::firstOrCreate(['name' => 'User']);
+        // Default role is "user"
+        $userRole = Role::firstOrCreate(['name' => 'user']);
         $userRole->syncPermissions([
             'user-list',
         ]);
@@ -82,7 +83,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'password' => Hash::make('Aa121212'),
             ]
         );
-        $regularUser->syncRoles(['User']);
+        $regularUser->syncRoles(['user']);
 
         $this->command->info('Roles and permissions seeded successfully!');
         $this->command->info('Demo users created:');

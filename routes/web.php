@@ -21,15 +21,19 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /******** Dashboards ********/
 Route::get('/', function () {
-    return redirect()->route('index'); // redirect '/' to '/index'
+    return redirect()->route('domains.index'); // redirect '/' to '/domains'
 });
 Route::get('index', [DashboardsController::class, 'index'])->name('index')->middleware('auth');
 
 /******** User Management ********/
 Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
-    Route::resource('roles', RoleController::class);
-    Route::resource('permissions', PermissionController::class);
+
+    // Roles & Permissions: Admin only
+    Route::middleware('role:Admin')->group(function () {
+        Route::resource('roles', RoleController::class);
+        Route::resource('permissions', PermissionController::class);
+    });
 
     // Connections
     Route::get('connections/telegram', [TelegramConnectionController::class, 'edit'])->name('connections.telegram.edit');
