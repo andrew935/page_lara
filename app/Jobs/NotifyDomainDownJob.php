@@ -41,10 +41,17 @@ class NotifyDomainDownJob implements ShouldQueue
         }
 
         $minutes = max(3, $domain->status_since->diffInMinutes(now()));
-        $message = "Robot - https://tech-robot-automation.com :<br> Domain {$domain->domain}, campain - {$domain->campaign} <br> is DOWN for {round($minutes)} minute(s)";
-     
+        $minutesRounded = (int) round($minutes);
+        $campaign = $domain->campaign ?: '—';
 
-        // Reuse the existing alert job + settings logic (notify_on_fail + configured channels)
+        // Use "\n" to break lines in the message (Telegram supports newlines).
+        // NOTE: "{round($minutes)}" will NOT evaluate inside strings in PHP; use $minutesRounded instead.
+        $message = "Robot - https://tech-robot-automation.com\n"
+            ."Domain: {$domain->domain}\n"
+            ."Campaign: {$campaign}\n"
+            ."Status: DOWN for {$minutesRounded} minute(s)";
+
+        // Reuse the existing alert job + settings logic (notify_on_fail + configured channels).
         SendAlertJob::dispatch($domain->account_id, $domain->id, $message);
 
         $domain->update(['down_notified_at' => now()]);
