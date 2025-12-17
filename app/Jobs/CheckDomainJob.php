@@ -7,6 +7,7 @@ use App\Domains\DomainIncident;
 use App\Notifications\NotificationSetting;
 use App\Services\DomainCheckService;
 use App\Jobs\SendAlertJob;
+use App\Jobs\NotifyDomainDownJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -59,6 +60,12 @@ class CheckDomainJob implements ShouldQueue
         $domain->update($payload);
 
         $domain->refresh();
+
+        // If we just transitioned to DOWN, schedule a delayed notify so alerts fire after ~3 minutes
+        // even when the check interval is longer than 3 minutes.
+        if ($oldStatus !== 'down' && $domain->status === 'down') {
+            NotifyDomainDownJob::dispatch($domain->id)->delay(now()->addMinutes(3));
+        }
 
         if ($oldStatus !== 'down' && $domain->status === 'down') {
             $this->openIncident($domain, $oldStatus, $domain->status, $domain->last_check_error);
