@@ -68,7 +68,7 @@
 								<div class="p-3 bg-primary text-fixed-white">
 									<div class="d-flex align-items-center justify-content-between">
 										<p class="mb-0 fs-16">Profile</p>
-										<a href="javascript:void(0);" class="text-fixed-white"><i class="ti ti-settings-cog"></i></a>
+										{{-- settings removed --}}
 									</div>
 								</div>
 								<div class="dropdown-divider"></div>
@@ -80,8 +80,8 @@
 											</span>
 										</div>
 										<div>
-											<span class="d-block fw-semibold lh-1">Tom Phillip</span>
-											<span class="text-muted fs-12">tomphillip32@gmail.com</span>
+											<span class="d-block fw-semibold lh-1">{{ auth()->user()->name ?? 'Account' }}</span>
+											<span class="text-muted fs-12">{{ auth()->user()->email ?? '' }}</span>
 										</div>
 									</div>
 								</div>
@@ -92,9 +92,6 @@
 											<li>
 												<a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i class="ti ti-user-circle me-2 fs-18"></i>View Profile</a>
 											</li>
-											<li>
-												<a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i class="ti ti-settings-cog me-2 fs-18"></i>Account Settings</a>
-											</li>
 										</ul>        
 									</li>
 									<li>
@@ -102,15 +99,16 @@
 											<li>
 												<a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i class="ti ti-lifebuoy me-2 fs-18"></i>Support</a>
 											</li>
-											<li>
-												<a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i class="ti ti-bolt me-2 fs-18"></i>Activity Log</a>
-											</li>
-											<li>
-												<a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i class="ti ti-calendar me-2 fs-18"></i>Events</a>
-											</li>
 										</ul>        
 									</li>
-									<li><a class="dropdown-item d-flex align-items-center" href="javascript:void(0);"><i class="ti ti-logout me-2 fs-18"></i>Log Out</a></li>
+									<li>
+										<form method="POST" action="{{ route('logout') }}">
+											@csrf
+											<button type="submit" class="dropdown-item d-flex align-items-center">
+												<i class="ti ti-logout me-2 fs-18"></i>Logout
+											</button>
+										</form>
+									</li>
 								</ul>
 							</div>
 						</li>  
