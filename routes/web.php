@@ -23,7 +23,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/', function () {
     return redirect()->route('domains.index'); // redirect '/' to '/domains'
 });
-Route::get('index', [DashboardsController::class, 'index'])->name('index')->middleware('auth');
+// Velzon "index" dashboard route -> redirect to domains (default landing page)
+Route::get('index', fn () => redirect()->route('domains.index'))->name('index');
 
 /******** User Management ********/
 Route::middleware('auth')->group(function () {
