@@ -61,6 +61,8 @@ class SendAlertJob implements ShouldQueue
                     Http::timeout(5)->get("https://api.telegram.org/bot{$settings->telegram_api_key}/sendMessage", [
                         'chat_id' => $settings->telegram_chat_id,
                         'text' => $this->message,
+                        'parse_mode' => 'HTML',
+                        'disable_web_page_preview' => true,
                     ]);
                 } else {
                     $status = 'failed';
