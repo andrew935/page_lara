@@ -350,10 +350,12 @@
 <script>
 (function() {
     const csrf = '{{ csrf_token() }}';
-    const checkBase = @json(url('domains'));
+    // Use relative URLs to avoid http/https mixed-content issues behind reverse proxies (e.g. Cloudflare).
+    const checkBase = @json('/domains');
     const routes = {
-        store: @json(route('domains.store')),
-        checkAll: @json(route('domains.checkAll')),
+        // Use non-absolute route URLs (3rd param = false) so browser keeps current scheme/host.
+        store: @json(route('domains.store', [], false)),
+        checkAll: @json(route('domains.checkAll', [], false)),
         checkOne: function(id) {
             return `${checkBase}/${id}/check-now`;
         },
