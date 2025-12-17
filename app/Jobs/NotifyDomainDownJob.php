@@ -42,8 +42,9 @@ class NotifyDomainDownJob implements ShouldQueue
 
         $minutes = max(3, $domain->status_since->diffInMinutes(now()));
         $message = "Robot - https://tech-robot-automation.com :<br> Domain {$domain->domain}, campain - {$domain->campaign} <br> is DOWN for {$minutes} minute(s)";
+     
 
-        // Reuse the existing alert job + settings logic (notify_on_fail + configured channels).
+        // Reuse the existing alert job + settings logic (notify_on_fail + configured channels)
         SendAlertJob::dispatch($domain->account_id, $domain->id, $message);
 
         $domain->update(['down_notified_at' => now()]);
