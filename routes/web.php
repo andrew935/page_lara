@@ -11,6 +11,7 @@ use App\Http\Controllers\TelegramConnectionController;
 use App\Http\Controllers\TelegramLogController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\DomainSettingsController;
+use App\Http\Controllers\AccountController;
 
 /******** Auth ********/
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -28,6 +29,9 @@ Route::get('index', fn () => redirect()->route('domains.index'))->name('index');
 
 /******** User Management ********/
 Route::middleware('auth')->group(function () {
+    // Account / profile
+    Route::get('account', [AccountController::class, 'show'])->name('account.show');
+
     Route::resource('users', UserController::class);
 
     // Roles & Permissions: Admin only

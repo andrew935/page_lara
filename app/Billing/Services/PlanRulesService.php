@@ -10,7 +10,8 @@ class PlanRulesService
     public function maxDomains(Account $account): int
     {
         $plan = $this->resolvePlan($account);
-        return $plan?->max_domains ?? 5;
+        // Default free plan: up to 50 domains.
+        return $plan?->max_domains ?? 50;
     }
 
     public function checkIntervalMinutes(Account $account): int
