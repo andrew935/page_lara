@@ -8,6 +8,7 @@ use App\Notifications\NotificationSetting;
 use App\Services\DomainCheckService;
 use App\Jobs\SendAlertJob;
 use App\Jobs\NotifyDomainDownJob;
+use App\Jobs\NotifyDomainUpJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -54,6 +55,7 @@ class CheckDomainJob implements ShouldQueue
                 $payload['down_notified_at'] = null; // reset so next down can notify again
             } elseif ($result['status'] === 'down') {
                 $payload['last_down_at'] = now();
+                $payload['up_notified_at'] = null; // reset so next recovery can notify again
             }
         }
 
@@ -65,6 +67,12 @@ class CheckDomainJob implements ShouldQueue
         // even when the check interval is longer than 3 minutes.
         if ($oldStatus !== 'down' && $domain->status === 'down') {
             NotifyDomainDownJob::dispatch($domain->id)->delay(now()->addMinutes(3));
+        }
+
+        // If we just transitioned to UP (recovered), schedule a delayed notify to fire after 5 minutes
+        // to ensure the domain is stable before sending the "UP" notification.
+        if ($oldStatus === 'down' && $domain->status === 'ok') {
+            NotifyDomainUpJob::dispatch($domain->id)->delay(now()->addMinutes(5));
         }
 
         if ($oldStatus !== 'down' && $domain->status === 'down') {

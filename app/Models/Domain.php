@@ -18,6 +18,7 @@ class Domain extends Model
         'last_up_at',
         'last_down_at',
         'down_notified_at',
+        'up_notified_at',
         'ssl_valid',
         'last_checked_at',
         'last_check_error',
@@ -30,6 +31,7 @@ class Domain extends Model
         'last_up_at' => 'datetime',
         'last_down_at' => 'datetime',
         'down_notified_at' => 'datetime',
+        'up_notified_at' => 'datetime',
         'ssl_valid' => 'boolean',
         'lastcheck' => 'array',
     ];
