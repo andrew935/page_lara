@@ -70,7 +70,8 @@ class AccountResolver
     protected static function ensurePlans(): void
     {
         $plans = [
-            ['name' => 'Free', 'slug' => 'free', 'max_domains' => 50, 'check_interval_minutes' => 120, 'price_cents' => 0],
+            // Default Free plan: up to 50 domains, allow checks as frequent as 20 minutes.
+            ['name' => 'Free', 'slug' => 'free', 'max_domains' => 50, 'check_interval_minutes' => 20, 'price_cents' => 0],
             ['name' => 'Pro', 'slug' => 'pro', 'max_domains' => 200, 'check_interval_minutes' => 30, 'price_cents' => 2900],
             ['name' => 'Max', 'slug' => 'max', 'max_domains' => 500, 'check_interval_minutes' => 5, 'price_cents' => 9900],
         ];

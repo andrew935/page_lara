@@ -9,6 +9,7 @@ use App\Models\Domain;
 use App\Models\DomainSetting;
 use App\Monitoring\CheckBatch;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 
 class ScheduleChecks extends Command
 {
@@ -24,18 +25,26 @@ class ScheduleChecks extends Command
             $settingsInterval = (int) (DomainSetting::where('account_id', $account->id)->value('check_interval_minutes') ?? 0);
             // Enforce plan minimum interval (can't check more frequently than plan allows).
             $interval = $settingsInterval > 0 ? max($planInterval, $settingsInterval) : $planInterval;
-            $latestBatch = CheckBatch::where('account_id', $account->id)
-                ->orderByDesc('created_at')
-                ->first();
 
-            $due = !$latestBatch || $latestBatch->created_at->addMinutes($interval)->lte(now());
-            if (!$due) {
-                $this->line("Skipping account {$account->id}, not due yet.");
-                continue;
-            }
-
+            // Queue domains individually when due:
+            // - never checked (last_checked_at is null) => due immediately
+            // - checked before => due when last_checked_at <= now - interval
+            // Also avoid re-queuing "just queued" pending rows every minute.
+            $dueCutoff = now()->subMinutes($interval);
             $domains = Domain::where('account_id', $account->id)
+                ->where(function (Builder $q) use ($dueCutoff) {
+                    $q->whereNull('last_checked_at')
+                        ->orWhere('last_checked_at', '<=', $dueCutoff);
+                })
+                ->where(function (Builder $q) {
+                    $q->where('status', '!=', 'pending')
+                        ->orWhereNull('last_check_error')
+                        ->orWhere('last_check_error', '!=', 'Queued for check')
+                        ->orWhere('updated_at', '<=', now()->subMinutes(5));
+                })
+                ->orderByRaw('last_checked_at is null desc')
                 ->orderBy('last_checked_at')
+                ->limit(500)
                 ->get();
 
             if ($domains->isEmpty()) {
