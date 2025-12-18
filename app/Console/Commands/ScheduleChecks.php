@@ -19,6 +19,12 @@ class ScheduleChecks extends Command
 
     public function handle(PlanRulesService $planRules): int
     {
+        // Skip if using Cloudflare mode
+        if (config('domain.check_mode') === 'cloudflare') {
+            $this->info('Domain checks are handled by Cloudflare Workers. Skipping server-side checks.');
+            return self::SUCCESS;
+        }
+
         $accounts = Account::all();
         foreach ($accounts as $account) {
             $planInterval = (int) $planRules->checkIntervalMinutes($account);

@@ -11,6 +11,7 @@ use App\Http\Controllers\TelegramConnectionController;
 use App\Http\Controllers\TelegramLogController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\DomainSettingsController;
+use App\Http\Controllers\DomainCheckSettingsController;
 use App\Http\Controllers\AccountController;
 
 /******** Auth ********/
@@ -62,4 +63,8 @@ Route::middleware('auth')->group(function () {
     // Domain settings
     Route::get('domains/settings', [DomainSettingsController::class, 'edit'])->name('domains.settings.edit');
     Route::post('domains/settings', [DomainSettingsController::class, 'update'])->name('domains.settings.update');
+
+    // Domain check settings (toggle between server/cloudflare)
+    Route::get('settings/domain-check', [DomainCheckSettingsController::class, 'index'])->name('settings.domain-check.index');
+    Route::post('settings/domain-check', [DomainCheckSettingsController::class, 'update'])->name('settings.domain-check.update');
 });

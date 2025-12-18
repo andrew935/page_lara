@@ -76,6 +76,11 @@ services:
     networks:
       - appnet
     restart: unless-stopped
+    # Optional: Use profiles to conditionally start scheduler
+    # Only runs when DOMAIN_CHECK_MODE=server
+    # Enable with: docker compose --profile server-check up -d
+    profiles:
+      - server-check
 
 volumes:
   db_data:
