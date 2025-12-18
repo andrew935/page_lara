@@ -44,7 +44,7 @@ class ScheduleChecks extends Command
                 })
                 ->orderByRaw('last_checked_at is null desc')
                 ->orderBy('last_checked_at')
-                ->limit(500)
+                ->limit(10) // Reduced from 500 to 10 to prevent server overload
                 ->get();
 
             if ($domains->isEmpty()) {
