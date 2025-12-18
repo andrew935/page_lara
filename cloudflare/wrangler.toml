@@ -26,9 +26,9 @@ compatibility_date = "2024-01-01"
 # =============================================================================
 # Cron Triggers
 # =============================================================================
-# Runs every 10 minutes to fetch and queue domains for checking
+# Runs every 20 minutes to fetch and queue domains for checking
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["*/20 * * * *"]
 
 # =============================================================================
 # Queue Bindings
@@ -45,7 +45,7 @@ max_batch_size = 10           # Process up to 10 domains per batch
 max_batch_timeout = 30        # Wait up to 30s to fill a batch
 max_retries = 3               # Retry failed checks up to 3 times
 dead_letter_queue = "domain-check-dlq"  # Failed messages go here
-max_concurrency = 10          # Run up to 10 consumers in parallel
+max_concurrency = 50          # Run up to 50 consumers in parallel (handles 500 domains quickly)
 
 # =============================================================================
 # Environment Variables (Non-sensitive)

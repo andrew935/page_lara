@@ -19,14 +19,14 @@
 export default {
   /**
    * Scheduled (Cron) Handler
-   * Runs every 10 minutes to fetch and queue domains for checking
+   * Runs every 20 minutes to fetch and queue ALL domains for checking
    */
   async scheduled(event, env, ctx) {
-    console.log('Cron triggered: Fetching domains due for checking...');
+    console.log('Cron triggered: Fetching ALL domains due for checking...');
     
     try {
-      // Fetch domains that need checking from Laravel
-      const response = await fetch(`${env.LARAVEL_API_URL}/api/cf/domains/due?limit=500`, {
+      // Fetch ALL domains that need checking from Laravel (up to 1000)
+      const response = await fetch(`${env.LARAVEL_API_URL}/api/cf/domains/due?limit=1000`, {
         headers: {
           'Authorization': `Bearer ${env.WEBHOOK_SECRET}`,
           'Accept': 'application/json',

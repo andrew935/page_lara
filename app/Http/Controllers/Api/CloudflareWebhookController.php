@@ -41,8 +41,8 @@ class CloudflareWebhookController extends Controller
 
         // Get all domains due for checking:
         // - Never checked (last_checked_at is null)
-        // - OR not checked in the last 10 minutes
-        $cutoff = now()->subMinutes(10);
+        // - OR not checked in the last 20 minutes
+        $cutoff = now()->subMinutes(20);
 
         $domains = Domain::query()
             ->whereNull('last_checked_at')

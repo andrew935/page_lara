@@ -4,11 +4,11 @@ This Cloudflare Worker offloads domain checking from your Laravel server, handli
 
 ## Cost Estimate
 
-| Resource | Free Tier | 500 domains @ 10min | Monthly Cost |
+| Resource | Free Tier | 500 domains @ 20min | Monthly Cost |
 |----------|-----------|---------------------|--------------|
-| Workers | 100k req/day | ~8.6k/day | **$0** |
-| Queues | 1M ops/month | ~4.3M ops | **~$1.32** |
-| **Total** | — | — | **~$1.50/month** |
+| Workers | 100k req/day | ~4.3k/day | **$0** |
+| Queues | 1M ops/month | ~2.16M ops | **~$0.46** |
+| **Total** | — | — | **~$0.50/month** |
 
 ## Prerequisites
 
@@ -156,8 +156,8 @@ docker compose start scheduler
 ┌─────────────────────────────────────────────────────────────────┐
 │                     CLOUDFLARE EDGE                              │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐  │
-│  │ Cron Trigger│───▶│  Scheduler  │───▶│  Queue (domain-     │  │
-│  │ (every 10m) │    │   Worker    │    │  check-queue)       │  │
+│  │ Cron Trigger│───▶│  Scheduler  │───▶│  Queue (ALL 500     │  │
+│  │ (every 20m) │    │   Worker    │    │  domains at once)   │  │
 │  └─────────────┘    └─────────────┘    └──────────┬──────────┘  │
 │                            │                      │              │
 │                            │ GET /api/cf/         │              │
@@ -234,20 +234,27 @@ Changes are live within seconds.
 
 ## Scaling
 
-The current configuration handles 500+ domains easily. To scale further:
+The current configuration handles **all 500 domains every 20 minutes** with 50 concurrent workers. To scale further:
 
-1. **Increase concurrency** in `wrangler.toml`:
+1. **Increase concurrency** (for 1000+ domains):
    ```toml
-   max_concurrency = 20  # or higher
+   max_concurrency = 100  # or higher
    ```
 
-2. **Increase batch size**:
+2. **Increase check frequency**:
    ```toml
-   max_batch_size = 20  # process 20 domains per worker invocation
+   crons = ["*/10 * * * *"]  # every 10 minutes
    ```
 
-3. **Reduce check interval** (edit cron in `wrangler.toml`):
-   ```toml
-   crons = ["*/5 * * * *"]  # every 5 minutes
-   ```
+3. **Increase domain limit** in Laravel:
+   - Edit `CloudflareWebhookController.php`
+   - Change `min($limit, 1000)` to `min($limit, 2000)`
+
+### Performance
+
+With the current setup:
+- **500 domains** queued in ~2 seconds
+- **50 concurrent workers** checking in parallel
+- **All 500 domains checked** in ~1-2 minutes
+- **Total time** from cron trigger to completion: ~2 minutes
 
