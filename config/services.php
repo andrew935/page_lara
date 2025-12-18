@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cloudflare Workers Integration
+    |--------------------------------------------------------------------------
+    | Used for offloading domain checks to Cloudflare Workers.
+    | The webhook_secret authenticates incoming requests from Workers.
+    */
+    'cloudflare' => [
+        'webhook_secret' => env('CLOUDFLARE_WEBHOOK_SECRET'),
+    ],
+
 ];

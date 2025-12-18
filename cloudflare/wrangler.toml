@@ -1,0 +1,78 @@
+# =============================================================================
+# Domain Checker Worker - Cloudflare Configuration
+# =============================================================================
+# 
+# This worker checks domain availability and SSL validity, offloading the work
+# from your Laravel server. It uses Cloudflare Queues for reliable processing.
+#
+# Before deploying, you need to:
+# 1. Create a Cloudflare account (if you don't have one)
+# 2. Install wrangler CLI: npm install -g wrangler
+# 3. Login to Cloudflare: wrangler login
+# 4. Create the queue: wrangler queues create domain-check-queue
+# 5. Set secrets: 
+#    wrangler secret put LARAVEL_API_URL
+#    wrangler secret put WEBHOOK_SECRET
+# 6. Deploy: npm run deploy (or wrangler deploy)
+# =============================================================================
+
+name = "domain-checker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Account ID - will be auto-detected after login, or set explicitly
+# account_id = "your-account-id-here"
+
+# =============================================================================
+# Cron Triggers
+# =============================================================================
+# Runs every 10 minutes to fetch and queue domains for checking
+[triggers]
+crons = ["*/10 * * * *"]
+
+# =============================================================================
+# Queue Bindings
+# =============================================================================
+# The queue used for domain check jobs
+[[queues.producers]]
+queue = "domain-check-queue"
+binding = "DOMAIN_CHECK_QUEUE"
+
+# Queue consumer configuration
+[[queues.consumers]]
+queue = "domain-check-queue"
+max_batch_size = 10           # Process up to 10 domains per batch
+max_batch_timeout = 30        # Wait up to 30s to fill a batch
+max_retries = 3               # Retry failed checks up to 3 times
+dead_letter_queue = "domain-check-dlq"  # Failed messages go here
+max_concurrency = 10          # Run up to 10 consumers in parallel
+
+# =============================================================================
+# Environment Variables (Non-sensitive)
+# =============================================================================
+# Sensitive values (API URL, secrets) should be set via:
+#   wrangler secret put LARAVEL_API_URL
+#   wrangler secret put WEBHOOK_SECRET
+
+[vars]
+ENVIRONMENT = "production"
+
+# =============================================================================
+# Development Environment
+# =============================================================================
+[env.dev]
+name = "domain-checker-dev"
+
+[env.dev.vars]
+ENVIRONMENT = "development"
+
+# For development, you can use local environment
+# wrangler dev --env dev
+
+# =============================================================================
+# Observability
+# =============================================================================
+# Enable logging (visible in Cloudflare dashboard and via `wrangler tail`)
+[observability]
+enabled = true
+
