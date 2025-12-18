@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // via X-Forwarded-* headers and doesn't generate http:// URLs (Mixed Content).
         $middleware->trustProxies(at: '*');
 
+        // If session expires / user is logged out, always redirect protected pages to login
+        // instead of showing a 404.
+        $middleware->redirectGuestsTo(fn () => route('login'));
+
         // Register Spatie permissions middleware aliases (used in routes as: role:Admin, permission:..., etc).
         $middleware->alias([
             'role' => RoleMiddleware::class,
