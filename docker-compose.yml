@@ -69,7 +69,7 @@ services:
       - docker/env.docker
     depends_on:
       - db
-    command: ["php", "artisan", "schedule:work"]
+    command: ["/bin/sh", "-c", "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"]
     volumes:
       - ./:/var/www
       - app_vendor:/var/www/vendor
