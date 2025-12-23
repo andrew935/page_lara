@@ -107,19 +107,29 @@ class DomainService
             if (!is_string($item) || trim($item) === '') {
                 continue;
             }
+
+            $name = trim($item);
+            $existing = Domain::where('account_id', $account->id)->where('domain', $name)->first();
+            if ($existing) {
+                continue;
+            }
+
             if ($current + $created >= $limit) {
                 break;
             }
-            Domain::firstOrCreate(
-                ['domain' => trim($item), 'account_id' => $account->id],
-                [
-                    'status' => 'pending',
-                    'ssl_valid' => null,
-                    'last_check_error' => null,
-                    'lastcheck' => [],
-                ]
-            );
-            $created++;
+
+            $model = Domain::create([
+                'account_id' => $account->id,
+                'domain' => $name,
+                'status' => 'pending',
+                'ssl_valid' => null,
+                'last_check_error' => null,
+                'lastcheck' => [],
+            ]);
+
+            if ($model->exists) {
+                $created++;
+            }
         }
 
         return $created;
@@ -181,25 +191,30 @@ class DomainService
             if (!$domainName || !is_string($domainName)) {
                 continue;
             }
-            if ($current + $created >= $limit) {
-                break;
-            }
             $domainName = trim($domainName);
-            $model = Domain::firstOrCreate(
-                ['domain' => $domainName, 'account_id' => $account->id],
-                [
+
+            $model = Domain::where('account_id', $account->id)->where('domain', $domainName)->first();
+            if (!$model) {
+                if ($current + $created >= $limit) {
+                    break;
+                }
+
+                $model = Domain::create([
+                    'account_id' => $account->id,
+                    'domain' => $domainName,
                     'campaign' => $campaign,
                     'status' => 'pending',
                     'ssl_valid' => null,
                     'last_check_error' => null,
                     'lastcheck' => [],
-                ]
-            );
+                ]);
 
-            if (!$model->wasRecentlyCreated && $campaign && $model->campaign !== $campaign) {
+                $created++;
+            }
+
+            if ($campaign && $model->campaign !== $campaign) {
                 $model->update(['campaign' => $campaign]);
             }
-            $created++;
         }
 
         return $created;

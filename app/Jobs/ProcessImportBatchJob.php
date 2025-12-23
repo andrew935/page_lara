@@ -42,19 +42,28 @@ class ProcessImportBatchJob implements ShouldQueue
                 continue;
             }
 
+            $name = trim($item);
+
+            $existing = Domain::where('account_id', $account->id)->where('domain', $name)->first();
+            if ($existing) {
+                continue;
+            }
+
             if ($current + $created >= $limit) {
                 break;
             }
 
-            Domain::firstOrCreate(
-                ['domain' => trim($item), 'account_id' => $account->id],
-                [
-                    'status' => 'pending',
-                    'ssl_valid' => null,
-                    'last_check_error' => null,
-                ]
-            );
-            $created++;
+            $model = Domain::create([
+                'account_id' => $account->id,
+                'domain' => $name,
+                'status' => 'pending',
+                'ssl_valid' => null,
+                'last_check_error' => null,
+            ]);
+
+            if ($model->exists) {
+                $created++;
+            }
         }
 
         $batch->update([

@@ -10,7 +10,7 @@ class DomainCheckService
     /**
      * Check a domain for HTTP reachability and SSL validity.
      */
-    public function check(string $domain): array
+    public function check(string $domain, bool $checkSsl = true): array
     {
         $result = [
             'status' => 'error',
@@ -25,7 +25,8 @@ class DomainCheckService
 
         try {
             $response = Http::timeout($timeout)->withOptions([
-                'verify' => true,
+                // Free plan skips SSL validation entirely.
+                'verify' => $checkSsl,
             ])->get($url);
 
             $isUp = $response->successful() || $response->redirect();
@@ -36,7 +37,7 @@ class DomainCheckService
             $result['error'] = $strictError;
 
             // Retry with relaxed SSL to determine reachability
-            if (str_contains($strictError, 'SSL certificate')) {
+            if ($checkSsl && str_contains($strictError, 'SSL certificate')) {
                 try {
                     $response = Http::timeout($timeout)->withOptions([
                         'verify' => false,
@@ -54,11 +55,13 @@ class DomainCheckService
             }
         }
 
-        // SSL validity check
-        $sslValid = $this->checkSsl($domain, $timeout);
-        $result['ssl_valid'] = $sslValid['valid'];
-        if (!$result['error'] && $sslValid['error']) {
-            $result['error'] = $sslValid['error'];
+        // SSL validity check (Pro/Max only)
+        if ($checkSsl) {
+            $sslValid = $this->checkSsl($domain, $timeout);
+            $result['ssl_valid'] = $sslValid['valid'];
+            if (!$result['error'] && $sslValid['error']) {
+                $result['error'] = $sslValid['error'];
+            }
         }
 
         return $result;

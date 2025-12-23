@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Identity\Account;
 use App\Models\Domain;
 use App\Domains\DomainIncident;
 use App\Notifications\NotificationSetting;
@@ -35,7 +36,13 @@ class CheckDomainJob implements ShouldQueue
         }
 
         $oldStatus = $domain->status;
-        $result = $checker->check($domain->domain);
+
+        $accountId = $domain->account_id ?? 1;
+        $account = Account::find($accountId);
+        $planSlug = $account?->activeSubscription()->with('plan')->first()?->plan?->slug ?? 'free';
+        $checkSsl = in_array($planSlug, ['pro', 'max'], true);
+
+        $result = $checker->check($domain->domain, $checkSsl);
 
         $payload = [
             'status' => $result['status'],

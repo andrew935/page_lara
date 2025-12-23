@@ -32,6 +32,7 @@ Route::get('index', fn () => redirect()->route('domains.index'))->name('index');
 Route::middleware('auth')->group(function () {
     // Account / profile
     Route::get('account', [AccountController::class, 'show'])->name('account.show');
+    Route::post('account/upgrade', [AccountController::class, 'upgrade'])->name('account.upgrade');
 
     Route::resource('users', UserController::class);
 

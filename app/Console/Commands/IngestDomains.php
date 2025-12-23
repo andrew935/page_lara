@@ -44,14 +44,28 @@ class IngestDomains extends Command
             if (!$domainName) {
                 continue;
             }
+
+            $domainName = trim((string) $domainName);
+            $existing = Domain::where('account_id', $account->id)->where('domain', $domainName)->first();
+            if ($existing) {
+                $existing->update(['status' => 'pending', 'ssl_valid' => null, 'last_check_error' => null]);
+                $count++;
+                continue;
+            }
+
             if ($current >= $limit) {
                 $this->warn('Reached plan domain limit; stopping ingest.');
                 break;
             }
-            Domain::updateOrCreate(
-                ['domain' => $domainName, 'account_id' => $account->id],
-                ['status' => 'pending', 'ssl_valid' => null, 'last_check_error' => null]
-            );
+
+            Domain::create([
+                'account_id' => $account->id,
+                'domain' => $domainName,
+                'status' => 'pending',
+                'ssl_valid' => null,
+                'last_check_error' => null,
+            ]);
+
             $count++;
             $current++;
         }
