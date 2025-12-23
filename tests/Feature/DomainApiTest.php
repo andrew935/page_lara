@@ -30,10 +30,19 @@ class DomainApiTest extends TestCase
             ->assertOk()
             ->assertJsonStructure(['domains']);
 
+        $this->actingAs($user)
+            ->postJson('/api/domains/test-all')
+            ->assertOk()
+            ->assertJsonStructure(['domains']);
+
         Queue::assertPushed(CheckDomainJob::class);
 
         $this->actingAs($user)
             ->postJson('/api/imports/json', ['json' => json_encode(['bar.test'])])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->postJson('/api/imports/json', ['json' => 'baz.test qux.test,example.net'])
             ->assertOk();
 
         $this->actingAs($user)

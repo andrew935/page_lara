@@ -3,6 +3,7 @@
 namespace App\Domains\Services;
 
 use App\Billing\Services\PlanRulesService;
+use App\Identity\Account;
 use App\Imports\ImportBatch;
 use App\Jobs\CheckDomainJob;
 use App\Models\Domain;
@@ -74,19 +75,25 @@ class DomainService
     public function queueAll(): array
     {
         $account = AccountResolver::current();
-        $updated = [];
+        return $this->queueAllMappedForAccount($account);
+    }
 
-        Domain::where('account_id', $account->id)
-            ->orderBy('last_checked_at')
-            ->chunkById(200, function ($domains) use (&$updated) {
-                foreach ($domains as $domain) {
-                    $this->markQueued($domain);
-                    $updated[] = $this->mapDomain($domain->fresh());
-                    CheckDomainJob::dispatch($domain->id);
-                }
-            });
+    /**
+     * Queue checks for all domains in the given account.
+     * Returns the number of domains queued.
+     */
+    public function queueAllForAccount(Account $account): int
+    {
+        return $this->queueAllInternal($account->id, false)['count'];
+    }
 
-        return $updated;
+    /**
+     * Queue checks for all domains in the given account.
+     * Returns mapped domains (used by UI/API).
+     */
+    public function queueAllMappedForAccount(Account $account): array
+    {
+        return $this->queueAllInternal($account->id, true)['mapped'];
     }
 
     public function importJsonPayload(array $domains): int
@@ -116,6 +123,36 @@ class DomainService
         }
 
         return $created;
+    }
+
+    /**
+     * Accepts either:
+     * - JSON array: ["a.com","b.com"]
+     * - Plain list: "a.com b.com" or "a.com, b.com" or newline-separated
+     *
+     * @return array<int, string>
+     */
+    public function parseDomainsInput(string $input): array
+    {
+        $trimmed = trim($input);
+        if ($trimmed === '') {
+            return [];
+        }
+
+        // Backward compatible: JSON array input
+        if (str_starts_with($trimmed, '[')) {
+            $decoded = json_decode($trimmed, true);
+            if (is_array($decoded)) {
+                return array_values(array_filter(array_map(static function ($v): string {
+                    return is_string($v) ? trim($v) : '';
+                }, $decoded), static fn (string $v): bool => $v !== ''));
+            }
+        }
+
+        // Plain list input: split on commas and any whitespace
+        $parts = preg_split('/[,\s]+/', $trimmed) ?: [];
+
+        return array_values(array_filter(array_map(static fn (string $v): string => trim($v), $parts), static fn (string $v): bool => $v !== ''));
     }
 
     public function importLatestFromFeed(): int
@@ -211,6 +248,32 @@ class DomainService
         }
 
         $domain->update($payload);
+    }
+
+    /**
+     * @return array{count:int, mapped:array<int, array<string, mixed>>}
+     */
+    private function queueAllInternal(int $accountId, bool $returnMapped): array
+    {
+        $count = 0;
+        $mapped = [];
+
+        Domain::where('account_id', $accountId)
+            ->orderBy('last_checked_at')
+            ->chunkById(200, function ($domains) use (&$count, &$mapped, $returnMapped) {
+                foreach ($domains as $domain) {
+                    $this->markQueued($domain);
+                    $count++;
+
+                    if ($returnMapped) {
+                        $mapped[] = $this->mapDomain($domain->fresh());
+                    }
+
+                    CheckDomainJob::dispatch($domain->id);
+                }
+            });
+
+        return ['count' => $count, 'mapped' => $mapped];
     }
 }
 

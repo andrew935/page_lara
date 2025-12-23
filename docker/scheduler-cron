@@ -1,2 +1,6 @@
 */5 * * * * cd /var/www && /usr/local/bin/php artisan monitoring:schedule-checks >> /var/log/cron.log 2>&1
 
+# Force queue all domains at 08:00 and 17:00 daily (same behavior as /api/domains/test-all)
+0 8 * * * cd /var/www && /usr/local/bin/php artisan domains:queue-all-hourly >> /var/log/cron.log 2>&1
+0 17 * * * cd /var/www && /usr/local/bin/php artisan domains:queue-all-hourly >> /var/log/cron.log 2>&1
+

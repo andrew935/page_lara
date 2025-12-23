@@ -130,18 +130,18 @@ class DomainController extends Controller
             'json' => ['required', 'string'],
         ]);
 
-        $decoded = json_decode($data['json'], true);
-        if (!is_array($decoded)) {
-            return back()->withErrors(['json' => 'Invalid JSON array of domains.']);
+        $domains = $service->parseDomainsInput($data['json']);
+        if (empty($domains)) {
+            return back()->withErrors(['json' => 'Please provide at least one domain (separate by space, comma, or new line).']);
         }
 
         // For large payloads, enqueue background processing
         $created = 0;
-        if (count($decoded) > 200) {
-            $batch = $service->createImportBatch('json', $decoded);
+        if (count($domains) > 200) {
+            $batch = $service->createImportBatch('json', $domains);
             ProcessImportBatchJob::dispatch($batch);
         } else {
-            $created = $service->importJsonPayload($decoded);
+            $created = $service->importJsonPayload($domains);
         }
 
         if ($request->expectsJson()) {

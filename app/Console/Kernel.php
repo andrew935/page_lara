@@ -14,6 +14,11 @@ class Kernel extends ConsoleKernel
     {
         // Run scheduler every minute; per-account intervals enforced in command
         $schedule->command('monitoring:schedule-checks')->everyMinute();
+
+        // Force queue all domains at 08:00 and 17:00 (same behavior as "Manual check (all)")
+        $schedule->command('domains:queue-all-hourly')
+            ->cron('0 8,17 * * *')
+            ->withoutOverlapping();
     }
 
     /**

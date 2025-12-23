@@ -83,17 +83,17 @@ class DomainApiController extends Controller
             'json' => ['required', 'string'],
         ]);
 
-        $decoded = json_decode($data['json'], true);
-        if (!is_array($decoded)) {
-            return response()->json(['message' => 'Invalid JSON array'], 422);
+        $domains = $service->parseDomainsInput($data['json']);
+        if (empty($domains)) {
+            return response()->json(['message' => 'Please provide at least one domain (separate by space, comma, or new line).'], 422);
         }
 
         $created = 0;
-        if (count($decoded) > 200) {
-            $batch = $service->createImportBatch('json', $decoded);
+        if (count($domains) > 200) {
+            $batch = $service->createImportBatch('json', $domains);
             ProcessImportBatchJob::dispatch($batch);
         } else {
-            $created = $service->importJsonPayload($decoded);
+            $created = $service->importJsonPayload($domains);
         }
 
         return response()->json(['message' => "{$created} domain(s) imported."]);

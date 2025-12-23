@@ -32,8 +32,11 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Check interval (minutes)</label>
-                        <input type="number" name="check_interval_minutes" class="form-control" min="1" max="1440"
+                        <input type="number" name="check_interval_minutes" class="form-control" min="{{ $minInterval ?? 1 }}" max="1440"
                                value="{{ old('check_interval_minutes', $settings->check_interval_minutes) }}" required>
+                        @if(isset($minInterval))
+                            <small class="text-muted">Minimum for your plan: {{ $minInterval }} minute(s).</small>
+                        @endif
                     </div>
                     <div class="col-md-4 d-flex align-items-center">
                         <div class="form-check mt-4">
@@ -63,9 +66,6 @@
     <div class="card custom-card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="card-title mb-0">Maintenance</div>
-            <a href="{{ route('domains.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="ri-edit-line me-1"></i> Edit domains
-            </a>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ route('domains.deleteAll') }}" onsubmit="return confirm('Delete ALL domains?');">
@@ -78,12 +78,12 @@
             <form method="POST" action="{{ route('domains.importJson') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label">Add domains via JSON (array of domain strings)</label>
-                    <textarea name="json" class="form-control" rows="4" placeholder='["example.com","another.com"]' required></textarea>
+                    <label class="form-label">Add domains (separate by space, comma, or new line)</label>
+                    <textarea name="json" class="form-control" rows="4" placeholder="example.com another.com, third.com" required></textarea>
                 </div>
                 <div class="text-end">
                     <button class="btn btn-outline-primary" type="submit">
-                        <i class="ri-download-2-line me-1"></i> Import JSON
+                        <i class="ri-download-2-line me-1"></i> Import
                     </button>
                 </div>
             </form>

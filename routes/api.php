@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CloudflareWebhookController;
 use App\Http\Controllers\Api\DomainApiController;
+use App\Http\Controllers\Api\PublicDomainQueueController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\NotificationSettingsController;
@@ -20,10 +21,15 @@ Route::prefix('cf')->middleware('cloudflare.webhook')->group(function () {
     Route::post('/domains/results', [CloudflareWebhookController::class, 'resultsBatch']);
 });
 
+// Public (non-session-auth) endpoint, protected by Bearer token (CLOUDFLARE_WEBHOOK_SECRET)
+Route::get('/domains/test-all/', [PublicDomainQueueController::class, 'testAllDomains']);
+
 Route::middleware('auth')->group(function () {
     Route::get('/domains', [DomainApiController::class, 'index']);
     Route::post('/domains', [DomainApiController::class, 'store']);
     Route::post('/domains/check-all', [DomainApiController::class, 'checkAll']);
+    // Alias for "test all domains" (queues checks for all domains in current account)
+    Route::post('/domains/test-all', [DomainApiController::class, 'checkAll']);
     Route::post('/domains/{domain}/check', [DomainApiController::class, 'check']);
     Route::delete('/domains/{domain}', [DomainApiController::class, 'destroy']);
     Route::post('/imports/json', [DomainApiController::class, 'importJson']);
