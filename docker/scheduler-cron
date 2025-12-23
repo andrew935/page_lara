@@ -4,3 +4,6 @@
 0 8 * * * cd /var/www && /usr/local/bin/php artisan domains:queue-all-hourly >> /var/log/cron.log 2>&1
 0 17 * * * cd /var/www && /usr/local/bin/php artisan domains:queue-all-hourly >> /var/log/cron.log 2>&1
 
+# Expire promotions (auto-downgrade back to Free)
+0 * * * * cd /var/www && /usr/local/bin/php artisan promotions:expire >> /var/log/cron.log 2>&1
+

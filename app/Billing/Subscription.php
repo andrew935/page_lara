@@ -16,6 +16,8 @@ class Subscription extends Model
         'renews_at',
         'ends_at',
         'canceled_at',
+        'promo_ends_at',
+        'promo_source_promotion_id',
     ];
 
     protected $casts = [
@@ -23,6 +25,7 @@ class Subscription extends Model
         'renews_at' => 'datetime',
         'ends_at' => 'datetime',
         'canceled_at' => 'datetime',
+        'promo_ends_at' => 'datetime',
     ];
 
     public function account(): BelongsTo

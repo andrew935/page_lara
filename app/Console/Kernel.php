@@ -19,6 +19,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('domains:queue-all-hourly')
             ->cron('0 8,17 * * *')
             ->withoutOverlapping();
+
+        // Expire time-boxed promotions (auto-downgrade back to Free)
+        $schedule->command('promotions:expire')->hourly()->withoutOverlapping();
     }
 
     /**

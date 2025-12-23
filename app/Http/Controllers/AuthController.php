@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Billing\Plan;
+use App\Billing\Subscription;
+use App\Models\Promotion;
 use App\Models\User;
 use App\Support\AccountResolver;
 use Illuminate\Http\Request;
@@ -73,7 +76,39 @@ class AuthController extends Controller
         Auth::login($user);
 
         // Create / attach a dedicated account for this user (prevents seeing shared account domains)
-        AccountResolver::current();
+        $account = AccountResolver::current();
+
+        // Apply active promotion for new signups (Max for free during a configured window)
+        $promotion = Promotion::query()
+            ->where('active', true)
+            ->where(function ($q) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            })
+            ->orderByDesc('starts_at')
+            ->first();
+
+        if ($promotion) {
+            $promoPlan = Plan::where('slug', $promotion->promo_plan_slug)->where('active', true)->first();
+            $freePlan = Plan::where('slug', 'free')->where('active', true)->first();
+
+            if ($promoPlan && $freePlan) {
+                $promoEndsAt = now()->addDays((int) $promotion->duration_days);
+
+                Subscription::updateOrCreate(
+                    ['account_id' => $account->id],
+                    [
+                        'plan_id' => $promoPlan->id,
+                        'status' => 'active',
+                        'starts_at' => now(),
+                        'promo_ends_at' => $promoEndsAt,
+                        'promo_source_promotion_id' => $promotion->id,
+                    ]
+                );
+            }
+        }
 
         return redirect()->route('domains.index');
     }

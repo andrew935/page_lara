@@ -91,6 +91,15 @@
 								</a>
 							</li>
 							<!-- End::slide -->
+
+							<!-- Start::slide -->
+							<li class="slide {{ request()->is('admin/promotions*') ? 'active' : '' }}">
+								<a href="{{ route('admin.promotions.index') }}" class="side-menu__item">
+									<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M224,96v64a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V96a16,16,0,0,0,16-16V64A16,16,0,0,1,64,48H192a16,16,0,0,1,16,16V80A16,16,0,0,0,224,96Z" opacity="0.2"/><path d="M224,96v64a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V96a16,16,0,0,0,16-16V64A16,16,0,0,1,64,48H192a16,16,0,0,1,16,16V80A16,16,0,0,0,224,96Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="80" cy="120" r="12"/><circle cx="176" cy="120" r="12"/><line x1="96" y1="152" x2="160" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+									<span class="side-menu__label">Promotions</span>
+								</a>
+							</li>
+							<!-- End::slide -->
 						@endrole
 
                         

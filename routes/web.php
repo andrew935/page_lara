@@ -13,6 +13,7 @@ use App\Http\Controllers\DomainController;
 use App\Http\Controllers\DomainSettingsController;
 use App\Http\Controllers\DomainCheckSettingsController;
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\PromotionController;
 
 /******** Auth ********/
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -40,6 +41,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Admin')->group(function () {
         Route::resource('roles', RoleController::class);
         Route::resource('permissions', PermissionController::class);
+
+        // Promotions (discounts)
+        Route::get('admin/promotions', [PromotionController::class, 'index'])->name('admin.promotions.index');
+        Route::get('admin/promotions/create', [PromotionController::class, 'create'])->name('admin.promotions.create');
+        Route::post('admin/promotions', [PromotionController::class, 'store'])->name('admin.promotions.store');
+        Route::post('admin/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('admin.promotions.toggle');
     });
 
     // Connections
