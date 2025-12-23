@@ -14,7 +14,15 @@ class DomainApiController extends Controller
     public function index()
     {
         $account = AccountResolver::current();
-        $domains = Domain::where('account_id', $account->id)
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+
+        $query = Domain::query();
+        if (!$isAdmin) {
+            $query->where('account_id', $account->id);
+        }
+
+        $domains = $query
             ->orderByRaw("CASE 
                 WHEN status = 'down' THEN 0 
                 WHEN status = 'ok' THEN 1 
@@ -43,7 +51,9 @@ class DomainApiController extends Controller
     public function check(Domain $domain, DomainService $service)
     {
         $account = AccountResolver::current();
-        if ($domain->account_id && $domain->account_id !== $account->id) {
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
             abort(404);
         }
 
@@ -68,7 +78,9 @@ class DomainApiController extends Controller
     public function destroy(Domain $domain)
     {
         $account = AccountResolver::current();
-        if ($domain->account_id && $domain->account_id !== $account->id) {
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
             abort(404);
         }
 

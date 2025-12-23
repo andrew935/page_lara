@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Auth;
 class AccountResolver
 {
     /**
-     * Resolve the current account, defaulting to a shared account.
+     * Resolve the current account.
+     *
+     * - Authenticated users are always mapped to a dedicated account (created on demand)
+     * - Guests fall back to the shared default account (id=1)
      */
     public static function current(): Account
     {
@@ -23,6 +26,26 @@ class AccountResolver
             if ($existing) {
                 return Account::findOrFail($existing->account_id);
             }
+
+            // No mapping yet => create/reuse a dedicated account for this user.
+            $account = Account::where('owner_user_id', $user->id)->first();
+            if (!$account) {
+                $account = Account::create([
+                    'name' => trim(($user->name ?? 'User') . ' Account'),
+                    'timezone' => 'UTC',
+                    'owner_user_id' => $user->id,
+                ]);
+            }
+
+            AccountUserRole::firstOrCreate(
+                ['account_id' => $account->id, 'user_id' => $user->id],
+                ['role' => 'owner']
+            );
+
+            self::ensurePlans();
+            self::ensureSubscriptionAndNotifications($account);
+
+            return $account;
         }
 
         return self::defaultAccount();
@@ -44,6 +67,41 @@ class AccountResolver
         // Ensure plans exist
         self::ensurePlans();
 
+        self::ensureSubscriptionAndNotifications($account);
+
+        return $account;
+    }
+
+    protected static function ensurePlans(): void
+    {
+        $plans = [
+            // Plan minimum check intervals:
+            // - Free: 60 minutes
+            // - Pro: 30 minutes
+            // - Max: 10 minutes
+            ['name' => 'Free', 'slug' => 'free', 'max_domains' => 50, 'check_interval_minutes' => 60, 'price_cents' => 0],
+            ['name' => 'Pro', 'slug' => 'pro', 'max_domains' => 200, 'check_interval_minutes' => 30, 'price_cents' => 5900],
+            ['name' => 'Max', 'slug' => 'max', 'max_domains' => 500, 'check_interval_minutes' => 10, 'price_cents' => 9900],
+        ];
+
+        foreach ($plans as $plan) {
+            // Keep plan values in sync across deploys.
+            Plan::updateOrCreate(
+                ['slug' => $plan['slug']],
+                [
+                    'name' => $plan['name'],
+                    'max_domains' => $plan['max_domains'],
+                    'check_interval_minutes' => $plan['check_interval_minutes'],
+                    'price_cents' => $plan['price_cents'],
+                    'currency' => 'USD',
+                    'active' => true,
+                ]
+            );
+        }
+    }
+
+    protected static function ensureSubscriptionAndNotifications(Account $account): void
+    {
         // Ensure a subscription is attached
         if (!$account->activeSubscription) {
             $plan = Plan::where('slug', 'free')->first();
@@ -63,36 +121,6 @@ class AccountResolver
                 'channels' => [],
             ]
         );
-
-        return $account;
-    }
-
-    protected static function ensurePlans(): void
-    {
-        $plans = [
-            // Plan minimum check intervals:
-            // - Free: 60 minutes
-            // - Pro: 30 minutes
-            // - Max: 10 minutes
-            ['name' => 'Free', 'slug' => 'free', 'max_domains' => 50, 'check_interval_minutes' => 60, 'price_cents' => 0],
-            ['name' => 'Pro', 'slug' => 'pro', 'max_domains' => 200, 'check_interval_minutes' => 30, 'price_cents' => 2900],
-            ['name' => 'Max', 'slug' => 'max', 'max_domains' => 500, 'check_interval_minutes' => 10, 'price_cents' => 9900],
-        ];
-
-        foreach ($plans as $plan) {
-            // Keep plan values in sync across deploys.
-            Plan::updateOrCreate(
-                ['slug' => $plan['slug']],
-                [
-                    'name' => $plan['name'],
-                    'max_domains' => $plan['max_domains'],
-                    'check_interval_minutes' => $plan['check_interval_minutes'],
-                    'price_cents' => $plan['price_cents'],
-                    'currency' => 'USD',
-                    'active' => true,
-                ]
-            );
-        }
     }
 }
 

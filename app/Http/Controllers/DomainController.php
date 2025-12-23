@@ -16,7 +16,15 @@ class DomainController extends Controller
     public function index()
     {
         $account = AccountResolver::current();
-        $domains = Domain::where('account_id', $account->id)
+        $user = auth()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+
+        $query = Domain::query();
+        if (!$isAdmin) {
+            $query->where('account_id', $account->id);
+        }
+
+        $domains = $query
             ->orderByRaw("CASE 
                 WHEN status = 'down' THEN 0 
                 WHEN status = 'ok' THEN 1 
@@ -24,10 +32,15 @@ class DomainController extends Controller
                 ELSE 3 END")
             ->orderByDesc('id')
             ->paginate(25);
-        $total = Domain::where('account_id', $account->id)->count();
-        $up = Domain::where('account_id', $account->id)->where('status', 'ok')->count();
-        $down = Domain::where('account_id', $account->id)->where('status', 'down')->count();
-        $pending = Domain::where('account_id', $account->id)->where('status', 'pending')->count();
+
+        $statsQuery = Domain::query();
+        if (!$isAdmin) {
+            $statsQuery->where('account_id', $account->id);
+        }
+        $total = (clone $statsQuery)->count();
+        $up = (clone $statsQuery)->where('status', 'ok')->count();
+        $down = (clone $statsQuery)->where('status', 'down')->count();
+        $pending = (clone $statsQuery)->where('status', 'pending')->count();
 
         return view('domains.index', compact('domains', 'total', 'up', 'down', 'pending'));
     }
@@ -62,7 +75,9 @@ class DomainController extends Controller
     public function check(Domain $domain, DomainService $service)
     {
         $account = AccountResolver::current();
-        if ($domain->account_id && $domain->account_id !== $account->id) {
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
             abort(404);
         }
 
@@ -81,7 +96,9 @@ class DomainController extends Controller
     public function checkNow(Domain $domain, DomainService $service, DomainCheckService $checker)
     {
         $account = AccountResolver::current();
-        if ($domain->account_id && $domain->account_id !== $account->id) {
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
             abort(404);
         }
 
@@ -166,7 +183,9 @@ class DomainController extends Controller
     public function update(Request $request, Domain $domain, DomainService $service)
     {
         $account = AccountResolver::current();
-        if ($domain->account_id && $domain->account_id !== $account->id) {
+        $user = $request->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
             abort(404);
         }
 
@@ -193,7 +212,9 @@ class DomainController extends Controller
     public function destroy(Domain $domain)
     {
         $account = AccountResolver::current();
-        if ($domain->account_id && $domain->account_id !== $account->id) {
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
             abort(404);
         }
 

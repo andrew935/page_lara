@@ -21,7 +21,7 @@ class AccountSetupSeeder extends Seeder
             // - Pro: 30 minutes
             // - Max: 10 minutes
             ['name' => 'Free', 'slug' => 'free', 'max_domains' => 50, 'check_interval_minutes' => 60, 'price_cents' => 0],
-            ['name' => 'Pro', 'slug' => 'pro', 'max_domains' => 200, 'check_interval_minutes' => 30, 'price_cents' => 2900],
+            ['name' => 'Pro', 'slug' => 'pro', 'max_domains' => 200, 'check_interval_minutes' => 30, 'price_cents' => 5900],
             ['name' => 'Max', 'slug' => 'max', 'max_domains' => 500, 'check_interval_minutes' => 10, 'price_cents' => 9900],
         ];
 

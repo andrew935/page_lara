@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\AccountResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -70,6 +71,9 @@ class AuthController extends Controller
         $user->assignRole($userRole);
 
         Auth::login($user);
+
+        // Create / attach a dedicated account for this user (prevents seeing shared account domains)
+        AccountResolver::current();
 
         return redirect()->route('domains.index');
     }
