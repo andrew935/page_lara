@@ -71,7 +71,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['email' => 'manager@aol.com'],
             [
                 'name' => 'Manager User',
-                'password' => Hash::make('Aa12333'),
+                'password' => Hash::make('Aa1233344!'),
             ]
         );
         $manager->syncRoles(['Manager']);

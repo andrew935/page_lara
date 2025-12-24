@@ -4,6 +4,15 @@ set -e
 # Avoid apt prompts in containers
 export DEBIAN_FRONTEND=noninteractive
 
+cd /var/www
+
+# Ensure Laravel has a .env file for cron-launched artisan commands.
+# Cron jobs often run with a minimal environment; without .env Laravel defaults to sqlite.
+if [ ! -f ".env" ] && [ -f "docker/env.docker" ]; then
+  cp docker/env.docker .env
+  sed -i 's/\r$//' .env
+fi
+
 # Install cron
 apt-get update && apt-get install -y --no-install-recommends cron
 
