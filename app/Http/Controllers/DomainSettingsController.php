@@ -44,6 +44,9 @@ class DomainSettingsController extends Controller
             'feed_url' => ['nullable', 'url'],
         ]);
 
+        // Ensure notify_on_fail has a boolean value (not null)
+        $data['notify_on_fail'] = (bool) ($data['notify_on_fail'] ?? false);
+
         $settings = DomainSetting::firstOrCreate(['account_id' => $account->id]);
         $settings->update($data);
 
