@@ -22,6 +22,11 @@ class Kernel extends ConsoleKernel
 
         // Expire time-boxed promotions (auto-downgrade back to Free)
         $schedule->command('promotions:expire')->hourly()->withoutOverlapping();
+
+        // Auto-import domains from feed daily at 6:00 AM (for accounts with auto_import_feed enabled)
+        $schedule->command('domains:auto-import')
+            ->dailyAt('06:00')
+            ->withoutOverlapping();
     }
 
     /**

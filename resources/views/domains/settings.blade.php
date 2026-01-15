@@ -105,6 +105,30 @@
                     </form>
                 </div>
             </div>
+            <hr>
+            <form method="POST" action="{{ route('domains.settings.update') }}">
+                @csrf
+                {{-- Preserve required settings so validation passes --}}
+                <input type="hidden" name="check_interval_minutes" value="{{ $settings->check_interval_minutes }}">
+                <input type="hidden" name="notify_payload" value="{{ $settings->notify_payload }}">
+                <input type="hidden" name="notify_on_fail" value="{{ $settings->notify_on_fail ? '1' : '0' }}">
+                <input type="hidden" name="feed_url" value="{{ $settings->feed_url }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="auto_import_feed" name="auto_import_feed"
+                                   {{ old('auto_import_feed', $settings->auto_import_feed) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="auto_import_feed">
+                                Auto-import daily at 6:00 AM
+                            </label>
+                        </div>
+                        <small class="text-muted ms-4">Deletes all existing domains and imports fresh ones from the feed URL every day at 6:00 AM.</small>
+                    </div>
+                    <button class="btn btn-primary btn-sm" type="submit">
+                        <i class="ri-save-line me-1"></i> Save
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -118,7 +142,8 @@
                 {{-- Preserve required settings so validation passes when only feed_url is edited --}}
                 <input type="hidden" name="check_interval_minutes" value="{{ old('check_interval_minutes', $settings->check_interval_minutes) }}">
                 <input type="hidden" name="notify_payload" value="{{ old('notify_payload', $settings->notify_payload) }}">
-                <input type="hidden" name="notify_on_fail" value="{{ old('notify_on_fail', $settings->notify_on_fail) }}">
+                <input type="hidden" name="notify_on_fail" value="{{ old('notify_on_fail', $settings->notify_on_fail) ? '1' : '0' }}">
+                <input type="hidden" name="auto_import_feed" value="{{ old('auto_import_feed', $settings->auto_import_feed) ? '1' : '0' }}">
                 <div class="modal-header">
                     <h6 class="modal-title">Edit feed URL</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

@@ -15,10 +15,12 @@ class DomainSetting extends Model
         'notify_on_fail',
         'notify_payload',
         'feed_url',
+        'auto_import_feed',
     ];
 
     protected $casts = [
         'notify_on_fail' => 'boolean',
+        'auto_import_feed' => 'boolean',
     ];
 }
 

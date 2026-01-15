@@ -66,6 +66,14 @@ class DomainService
         Domain::where('account_id', $account->id)->delete();
     }
 
+    /**
+     * Delete all domains for a specific account (used by scheduled tasks).
+     */
+    public function deleteAllForAccount(int $accountId): int
+    {
+        return Domain::where('account_id', $accountId)->delete();
+    }
+
     public function queueDomain(Domain $domain): void
     {
         $this->markQueued($domain);
@@ -201,6 +209,69 @@ class DomainService
 
                 $model = Domain::create([
                     'account_id' => $account->id,
+                    'domain' => $domainName,
+                    'campaign' => $campaign,
+                    'status' => 'pending',
+                    'ssl_valid' => null,
+                    'last_check_error' => null,
+                    'lastcheck' => [],
+                ]);
+
+                $created++;
+            }
+
+            if ($campaign && $model->campaign !== $campaign) {
+                $model->update(['campaign' => $campaign]);
+            }
+        }
+
+        return $created;
+    }
+
+    /**
+     * Import domains from feed for a specific account (used by scheduled tasks).
+     * Does not rely on AccountResolver.
+     */
+    public function importLatestFromFeedForAccount(int $accountId): int
+    {
+        $account = Account::find($accountId);
+        if (!$account) {
+            return 0;
+        }
+
+        $settings = DomainSetting::where('account_id', $accountId)->first();
+        $url = $settings && $settings->feed_url ? $settings->feed_url : config('domain.source_url', '');
+        if (!$url) {
+            return 0;
+        }
+
+        $response = Http::withoutVerifying()->timeout(15)->get($url);
+        if (!$response->ok()) {
+            return 0;
+        }
+
+        $payload = $response->json();
+        $list = $payload['domains'] ?? [];
+        $created = 0;
+        $limit = $this->planRules->maxDomains($account);
+        $current = Domain::where('account_id', $accountId)->count();
+
+        foreach ($list as $item) {
+            $domainName = $item['domain'] ?? null;
+            $campaign = $item['campaign'] ?? null;
+            if (!$domainName || !is_string($domainName)) {
+                continue;
+            }
+            $domainName = trim($domainName);
+
+            $model = Domain::where('account_id', $accountId)->where('domain', $domainName)->first();
+            if (!$model) {
+                if ($current + $created >= $limit) {
+                    break;
+                }
+
+                $model = Domain::create([
+                    'account_id' => $accountId,
                     'domain' => $domainName,
                     'campaign' => $campaign,
                     'status' => 'pending',

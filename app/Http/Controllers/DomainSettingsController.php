@@ -42,10 +42,12 @@ class DomainSettingsController extends Controller
             'notify_on_fail' => ['nullable', 'boolean'],
             'notify_payload' => ['nullable', 'string'],
             'feed_url' => ['nullable', 'url'],
+            'auto_import_feed' => ['nullable', 'boolean'],
         ]);
 
-        // Ensure notify_on_fail has a boolean value (not null)
+        // Ensure boolean fields have boolean values (not null)
         $data['notify_on_fail'] = (bool) ($data['notify_on_fail'] ?? false);
+        $data['auto_import_feed'] = (bool) ($data['auto_import_feed'] ?? false);
 
         $settings = DomainSetting::firstOrCreate(['account_id' => $account->id]);
         $settings->update($data);
