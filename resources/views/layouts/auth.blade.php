@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auth | Vyzor</title>
-    <link rel="icon" href="{{ asset('build/assets/images/brand-logos/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('img/2.jpg') }}" type="image/x-icon">
     <link href="{{ asset('build/assets/icon-fonts/icons.css') }}" rel="stylesheet">
     @include('layouts.components.styles')
     @vite(['resources/sass/app.scss'])
