@@ -5,14 +5,20 @@
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
             <div class="text-center mb-4">
-                <a href="{{ url('index') }}">
+                <a href="{{ url('/landing.html') }}">
                     <img src="{{ asset('img/logo.png') }}" alt="logo" height="48">
                 </a>
             </div>
             <div class="card custom-card">
                 <div class="card-header text-center border-0 pb-0">
                     <div class="card-title mb-1">Create Account</div>
-                    <p class="text-muted mb-0">Register to get started</p>
+                    <p class="text-muted mb-0">
+                        @if(request('plan'))
+                            Register for the <strong class="text-primary">{{ ucfirst(request('plan')) }}</strong> plan
+                        @else
+                            Register to get started
+                        @endif
+                    </p>
                 </div>
                 <div class="card-body">
                     @if ($errors->any())
@@ -27,6 +33,9 @@
 
                     <form method="POST" action="{{ route('register.submit') }}">
                         @csrf
+                        @if(request('plan'))
+                            <input type="hidden" name="plan" value="{{ request('plan') }}">
+                        @endif
                         <div class="mb-3">
                             <label for="name" class="form-label">Name</label>
                             <input type="text" name="name" id="name"
@@ -50,6 +59,19 @@
                                 <label for="password_confirmation" class="form-label">Confirm Password</label>
                                 <input type="password" name="password_confirmation" id="password_confirmation"
                                        class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input @error('terms') is-invalid @enderror" 
+                                       type="checkbox" value="1" id="terms" name="terms" 
+                                       {{ old('terms') ? 'checked' : '' }} required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="{{ route('terms') }}" target="_blank" class="text-primary">Terms and Conditions</a>
+                                </label>
+                                @error('terms')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         <div class="d-grid mt-4">

@@ -15,6 +15,9 @@ use App\Http\Controllers\DomainCheckSettingsController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\PromotionController;
 
+/******** Public Pages ********/
+Route::get('/terms', fn () => view('pages.terms'))->name('terms');
+
 /******** Auth ********/
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');

@@ -61,6 +61,8 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', 'min:8'],
+            'terms' => ['required', 'accepted'],
+            'plan' => ['nullable', 'string', 'in:free,pro,max'],
         ]);
 
         $user = User::create([
@@ -105,6 +107,19 @@ class AuthController extends Controller
                         'starts_at' => now(),
                         'promo_ends_at' => $promoEndsAt,
                         'promo_source_promotion_id' => $promotion->id,
+                    ]
+                );
+            }
+        } elseif (!empty($data['plan'])) {
+            // If user selected a specific plan and no promotion is active
+            $selectedPlan = Plan::where('slug', $data['plan'])->where('active', true)->first();
+            if ($selectedPlan) {
+                Subscription::updateOrCreate(
+                    ['account_id' => $account->id],
+                    [
+                        'plan_id' => $selectedPlan->id,
+                        'status' => 'active',
+                        'starts_at' => now(),
                     ]
                 );
             }
