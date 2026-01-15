@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth | Vyzor</title>
+    <title>Domain-Monitor-PRO</title>
     <link rel="icon" href="{{ asset('img/2.jpg') }}" type="image/x-icon">
     <link href="{{ asset('build/assets/icon-fonts/icons.css') }}" rel="stylesheet">
     @include('layouts.components.styles')
