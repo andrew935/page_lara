@@ -26,8 +26,8 @@ Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('regi
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-/******** Dashboards ********/
-Route::get('/', function () {
+/******** Dashboards ********/   
+Route::get('/dashboard', function () {
     return redirect()->route('domains.index'); // redirect '/' to '/domains'
 });
 // Velzon "index" dashboard route -> redirect to domains (default landing page)
