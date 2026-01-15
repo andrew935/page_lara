@@ -10,6 +10,7 @@ use App\Jobs\NotifyDomainDownJob;
 use App\Jobs\NotifyDomainUpJob;
 use App\Jobs\SendAlertJob;
 use App\Models\Domain;
+use App\Models\DomainSetting;
 use App\Notifications\NotificationSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,8 @@ class CloudflareWebhookController extends Controller
      * GET /api/cf/domains/due
      * 
      * Returns domains that are due for checking (across all accounts).
-     * Cloudflare Worker calls this every 10 minutes to get domains to check.
+     * Respects each account's check_interval_minutes setting.
+     * Cloudflare Worker calls this every 20 minutes to get domains to check.
      * 
      * Query params:
      * - limit: Max domains to return (default 500)
@@ -39,24 +41,36 @@ class CloudflareWebhookController extends Controller
         $limit = (int) $request->query('limit', 500);
         $limit = min($limit, 1000); // Cap at 1000 per request
 
-        // Get all domains due for checking:
-        // - Never checked (last_checked_at is null)
-        // - OR not checked in the last 20 minutes
-        $cutoff = now()->subMinutes(20);
+        // Get all account settings indexed by account_id
+        $accountSettings = DomainSetting::all()->keyBy('account_id');
+        $defaultInterval = 60; // Default to 60 minutes if no setting exists
 
-        $domains = Domain::query()
-            ->whereNull('last_checked_at')
-            ->orWhere('last_checked_at', '<=', $cutoff)
+        // Get all domains and filter by each account's check interval
+        $allDomains = Domain::query()
             ->orderByRaw('last_checked_at is null desc') // Prioritize never-checked
             ->orderBy('last_checked_at') // Then oldest first
-            ->limit($limit)
             ->get(['id', 'domain', 'campaign', 'account_id', 'status', 'last_checked_at']);
 
-        Log::info("Cloudflare: Returning {$domains->count()} domains due for checking");
+        $dueDomains = $allDomains->filter(function ($domain) use ($accountSettings, $defaultInterval) {
+            // Never checked - always due
+            if ($domain->last_checked_at === null) {
+                return true;
+            }
+
+            // Get this account's check interval
+            $setting = $accountSettings->get($domain->account_id);
+            $intervalMinutes = $setting ? (int) $setting->check_interval_minutes : $defaultInterval;
+
+            // Check if domain is due based on account's interval
+            $cutoff = now()->subMinutes($intervalMinutes);
+            return $domain->last_checked_at <= $cutoff;
+        })->take($limit);
+
+        Log::info("Cloudflare: Returning {$dueDomains->count()} domains due for checking");
 
         return response()->json([
-            'count' => $domains->count(),
-            'domains' => $domains->map(fn($d) => [
+            'count' => $dueDomains->count(),
+            'domains' => $dueDomains->map(fn($d) => [
                 'id' => $d->id,
                 'domain' => $d->domain,
                 'campaign' => $d->campaign,
