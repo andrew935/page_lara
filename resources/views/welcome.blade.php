@@ -3,7 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Domain Monitor Pro  - Real-Time Domain & SSL Monitoring</title>
+    <title>Domain Monitor Pro - Real-Time Domain & SSL Monitoring</title>
+    <meta name="description" content="Real-time domain and SSL monitoring with instant alerts. Monitor up to 500 domains, track SSL certificates, and get notified via Telegram, email, or webhooks.">
+    
+    <!-- Open Graph / Facebook / Telegram -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="Domain Monitor Pro - Real-Time Domain & SSL Monitoring">
+    <meta property="og:description" content="Real-time domain and SSL monitoring with instant alerts. Monitor up to 500 domains, track SSL certificates, and get notified via Telegram, email, or webhooks.">
+    <meta property="og:image" content="{{ asset('img/logo.png') }}">
+    <meta property="og:site_name" content="Domain Monitor Pro">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Domain Monitor Pro - Real-Time Domain & SSL Monitoring">
+    <meta name="twitter:description" content="Real-time domain and SSL monitoring with instant alerts. Monitor up to 500 domains, track SSL certificates, and get notified via Telegram, email, or webhooks.">
+    <meta name="twitter:image" content="{{ asset('img/logo.png') }}">
+    
     <link rel="icon" href="{{ asset('img/2.jpg') }}" type="image/x-icon">
     <style>
         :root {
