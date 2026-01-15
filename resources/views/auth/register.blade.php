@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md-8">
             <div class="text-center mb-4">
-                <a href="{{ url('/landing.html') }}">
+                <a href="{{ route('welcome') }}">
                     <img src="{{ asset('img/logo.png') }}" alt="logo" height="48">
                 </a>
             </div>

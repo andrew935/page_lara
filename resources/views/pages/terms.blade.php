@@ -147,7 +147,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <a href="/landing.html" class="logo">
+            <a href="{{ route('welcome') }}" class="logo">
                 <img src="{{ asset('img/logo.png') }}" alt="Domain Monitor Pro">
             </a>
             <h1>Terms and Conditions</h1>

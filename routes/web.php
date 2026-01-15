@@ -16,6 +16,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\PromotionController;
 
 /******** Public Pages ********/
+Route::get('/', fn () => view('welcome'))->name('welcome');
 Route::get('/terms', fn () => view('pages.terms'))->name('terms');
 
 /******** Auth ********/
