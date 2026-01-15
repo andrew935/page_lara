@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name', 'Domain Monitor Pro') }} - Real-Time Domain & SSL Monitoring</title>
+    <title> Domain Monitor Pro  - Real-Time Domain & SSL Monitoring</title>
     <link rel="icon" href="{{ asset('img/2.jpg') }}" type="image/x-icon">
     <style>
         :root {

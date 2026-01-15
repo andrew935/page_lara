@@ -11,7 +11,7 @@
         <meta name="Author" content="Spruko Technologies Private Limited">
     
         <!-- Title-->
-        <title> {{ config('app.name', 'Domain Monitor Pro') }} </title>
+        <title> Domain Monitor Pro  - Real-Time Domain & SSL Monitoring</title>
         
         <!-- Favicon -->
         {{-- <link rel="icon" href="{{asset('build/assets/images/brand-logos/favicon.ico')}}" type="image/x-icon"> --}}
