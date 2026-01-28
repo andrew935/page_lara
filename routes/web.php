@@ -14,10 +14,12 @@ use App\Http\Controllers\DomainSettingsController;
 use App\Http\Controllers\DomainCheckSettingsController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentsController;
 
 /******** Public Pages ********/
 Route::get('/', fn () => view('welcome'))->name('welcome');
-Route::get('/terms', fn () => view('pages.terms'))->name('terms');
+Route::get('/terms', fn () => view('terms'))->name('terms');
 
 /******** Auth ********/
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -79,4 +81,17 @@ Route::middleware('auth')->group(function () {
     // Domain check settings (toggle between server/cloudflare)
     Route::get('settings/domain-check', [DomainCheckSettingsController::class, 'index'])->name('settings.domain-check.index');
     Route::post('settings/domain-check', [DomainCheckSettingsController::class, 'update'])->name('settings.domain-check.update');
+
+    // Billing & Payment
+    Route::get('billing', [PaymentController::class, 'index'])->name('billing.index');
+    Route::post('billing/payment-method', [PaymentController::class, 'updatePaymentMethod'])->name('billing.payment-method');
+    Route::post('billing/subscribe', [PaymentController::class, 'subscribe'])->name('billing.subscribe');
+    Route::post('billing/upgrade', [PaymentController::class, 'upgrade'])->name('billing.upgrade');
+    Route::post('billing/downgrade', [PaymentController::class, 'downgrade'])->name('billing.downgrade');
+    Route::post('billing/cancel', [PaymentController::class, 'cancel'])->name('billing.cancel');
+
+    // Payments History
+    Route::get('payments', [PaymentsController::class, 'index'])->name('payments.index');
+    Route::get('payments/export', [PaymentsController::class, 'export'])->name('payments.export');
+    Route::get('payments/{payment}', [PaymentsController::class, 'show'])->name('payments.show');
 });

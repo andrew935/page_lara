@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CloudflareWebhookAuth;
+use App\Http\Middleware\RequirePaymentMethod;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
@@ -30,6 +31,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'cloudflare.webhook' => CloudflareWebhookAuth::class,
+            'require.payment' => RequirePaymentMethod::class,
+        ]);
+
+        // Apply payment requirement check globally to web routes
+        $middleware->web(append: [
+            RequirePaymentMethod::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

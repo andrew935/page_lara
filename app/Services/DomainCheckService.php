@@ -55,7 +55,8 @@ class DomainCheckService
             }
         }
 
-        // SSL validity check (Pro/Max only)
+        // SSL validity check (paid plans only: Starter, Business, Enterprise)
+        // Free plan: checkSsl = false, ssl_valid remains null
         if ($checkSsl) {
             $sslValid = $this->checkSsl($domain, $timeout);
             $result['ssl_valid'] = $sslValid['valid'];

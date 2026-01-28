@@ -385,10 +385,22 @@
 
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            max-width: 1100px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            max-width: 1400px;
             margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .pricing-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .pricing-card {
@@ -771,7 +783,7 @@
                 <a href="#testimonials">Reviews</a>
                 <a href="#contact">Contact</a>
                 <a href="{{ route('login') }}" class="btn btn-secondary">Login</a>
-                <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
+                <a href="#pricing" class="btn btn-primary">Get Started</a>
             </div>
         </div>
     </nav>
@@ -785,7 +797,7 @@
             <h1>Monitor Your Domains<br><span>Before They Go Down</span></h1>
             <p>Real-time domain and SSL monitoring with instant alerts. Know when your sites are down before your customers do.</p>
             <div class="hero-buttons">
-                <a href="{{ route('register') }}" class="btn btn-primary">Start Free Trial →</a>
+                <a href="#pricing" class="btn btn-primary">Start Free Trial →</a>
                 <a href="#features" class="btn btn-secondary">Learn More</a>
             </div>
             <div class="hero-stats">
@@ -849,42 +861,65 @@
     <section class="pricing" id="pricing">
         <div class="section-header">
             <h2>Simple, Transparent Pricing</h2>
-            <p>Choose the plan that fits your needs. All plans include core monitoring features.</p>
+            <p>Choose the plan that fits your needs. Upgrade or downgrade anytime. Cancel whenever you want.</p>
         </div>
         <div class="pricing-grid">
+            <!-- Free Plan -->
             <div class="pricing-card">
                 <div class="pricing-header">
                     <div class="pricing-name">Free</div>
                     <div class="pricing-price">$0<span>/month</span></div>
                 </div>
                 <ul class="pricing-features">
-                    <li>Up to 50 domains</li>
+                    <li>Up to 20 domains</li>
                     <li>60-minute check interval</li>
                     <li>Basic uptime monitoring</li>
-                    <li>Email notifications</li>
-                    <li>24-hour history</li>
+                    <li>Telegram notifications</li>
+                    <li>No credit card required</li>
                 </ul>
                 <a href="{{ route('register', ['plan' => 'free']) }}" class="btn btn-outline">Get Started Free</a>
             </div>
-            <div class="pricing-card featured">
+            
+            <!-- Starter Plan -->
+            <div class="pricing-card">
                 <div class="pricing-header">
-                    <div class="pricing-name">Pro</div>
-                    <div class="pricing-price">$59<span>/month</span></div>
+                    <div class="pricing-name">Starter</div>
+                    <div class="pricing-price">$49<span>/month</span></div>
                 </div>
                 <ul class="pricing-features">
-                    <li>Up to 200 domains</li>
+                    <li>Up to 100 domains</li>
                     <li>30-minute check interval</li>
                     <li>SSL certificate monitoring</li>
-                    <li>Telegram & webhook alerts</li>
+                    <li>Telegram & email alerts</li>
                     <li>7-day history</li>
                     <li>Priority support</li>
                 </ul>
-                <a href="{{ route('register', ['plan' => 'pro']) }}" class="btn btn-primary">Start Pro Trial</a>
+                <a href="{{ route('register', ['plan' => 'starter']) }}" class="btn btn-outline">Start Now</a>
             </div>
+            
+            <!-- Business Plan (Featured) -->
+            <div class="pricing-card featured">
+                <div class="pricing-header">
+                    <div class="pricing-name">Business</div>
+                    <div class="pricing-price">$79<span>/month</span></div>
+                </div>
+                <ul class="pricing-features">
+                    <li>Up to 200 domains</li>
+                    <li>20-minute check interval</li>
+                    <li>Advanced SSL monitoring</li>
+                    <li>All notification channels</li>
+                    <li>30-day history</li>
+                    {{-- <li>Webhook support</li> --}}
+                    <li>Priority support</li>
+                </ul>
+                <a href="{{ route('register', ['plan' => 'business']) }}" class="btn btn-primary">Most Popular</a>
+            </div>
+            
+            <!-- Enterprise Plan -->
             <div class="pricing-card">
                 <div class="pricing-header">
-                    <div class="pricing-name">Max</div>
-                    <div class="pricing-price">$99<span>/month</span></div>
+                    <div class="pricing-name">Enterprise</div>
+                    <div class="pricing-price">$109<span>/month</span></div>
                 </div>
                 <ul class="pricing-features">
                     <li>Up to 500 domains</li>
@@ -893,10 +928,21 @@
                     <li>All notification channels</li>
                     <li>30-day history</li>
                     <li>Auto feed import</li>
+                    {{-- <li>API access</li> --}}
                     <li>Dedicated support</li>
                 </ul>
-                <a href="{{ route('register', ['plan' => 'max']) }}" class="btn btn-outline">Start Max Trial</a>
+                <a href="{{ route('register', ['plan' => 'enterprise']) }}" class="btn btn-outline">Start Now</a>
             </div>
+        </div>
+        
+        <!-- Billing Info -->
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--surface); border-radius: var(--border-radius); max-width: 800px; margin-left: auto; margin-right: auto;">
+            <h3 style="margin-bottom: 1rem; color: var(--text);">💳 Automatic Monthly Billing</h3>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">• Your card is charged automatically each month - no reminders sent</p>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">• Upgrades are instant with prorated billing</p>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">• Downgrades take effect at the end of your billing period</p>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">• Cancel anytime - takes effect at the end of your period</p>
+            <p style="color: var(--text-muted); margin-top: 1rem;"><small>All paid plans billed monthly. <a href="{{ route('terms') }}" style="color: var(--secondary);">Terms of Service</a></small></p>
         </div>
     </section>
 

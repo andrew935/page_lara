@@ -92,7 +92,12 @@
             <div class="card custom-card">
                 <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="card-title mb-0">Upgrade plan</div>
-                    <span class="text-muted fs-12">Select a plan to upgrade</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted fs-12">Select a plan to upgrade</span>
+                        <a href="{{ route('billing.index') }}" class="btn btn-sm btn-primary">
+                            <i class="ri-bank-card-line me-1"></i> Go to Billing & Payment
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -100,7 +105,7 @@
                             @php
                                 $isCurrent = ($plan && $p->id === $plan->id) || (!$plan && $p->slug === 'free');
                                 $price = ($p->price_cents ?? 0) > 0 ? '$' . number_format(($p->price_cents / 100), 2) . '/mo' : '$0/mo';
-                                $hasSslCheck = in_array($p->slug, ['pro', 'max'], true);
+                                $hasSslCheck = ($p->price_cents ?? 0) > 0; // All paid plans have SSL check
                                 $currentPrice = $plan?->price_cents ?? 0;
                                 $canUpgradeToThis = !$isCurrent && ($p->price_cents ?? 0) > $currentPrice;
                             @endphp
@@ -130,13 +135,21 @@
 
                                         <div class="mt-3">
                                             @if($canUpgradeToThis)
-                                                <form method="POST" action="{{ route('account.upgrade') }}">
-                                                    @csrf
-                                                    <input type="hidden" name="plan" value="{{ $p->slug }}">
-                                                    <button type="submit" class="btn btn-primary btn-sm w-100">
-                                                        Upgrade to {{ $p->name }}
-                                                    </button>
-                                                </form>
+                                                @if($p->price_cents > 0)
+                                                    {{-- Paid plans: redirect to billing page for payment --}}
+                                                    <a href="{{ route('billing.index') }}" class="btn btn-primary btn-sm w-100">
+                                                        Upgrade to {{ $p->name }} (Payment Required)
+                                                    </a>
+                                                @else
+                                                    {{-- Free plan: can upgrade directly --}}
+                                                    <form method="POST" action="{{ route('account.upgrade') }}">
+                                                        @csrf
+                                                        <input type="hidden" name="plan" value="{{ $p->slug }}">
+                                                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                                                            Upgrade to {{ $p->name }}
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             @elseif($isCurrent)
                                                 <button type="button" class="btn btn-outline-secondary btn-sm w-100" disabled>
                                                     Current plan
@@ -152,9 +165,13 @@
                             </div>
                         @endforeach
                     </div>
-                    <small class="text-muted d-block mt-3">
-                        Note: This upgrade action only changes the active plan in the database (no payment integration).
-                    </small>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="ri-information-line me-2"></i>
+                        <strong>Paid Plans Require Payment:</strong> To upgrade to Starter ($49), Business ($79), or Enterprise ($109) plans, 
+                        click the "Upgrade" button above or visit the 
+                        <a href="{{ route('billing.index') }}" class="alert-link fw-semibold">Billing & Payment page</a> 
+                        to add your payment method and subscribe. Free plan upgrades can be done directly from this page.
+                    </div>
                 </div>
             </div>
         </div>

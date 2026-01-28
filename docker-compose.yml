@@ -35,7 +35,7 @@ services:
       # picking up DB_* values from your local Laravel `.env`.
       MYSQL_DATABASE: page_lara
       MYSQL_USER: page_lara
-      MYSQL_PASSWORD: secret
+      MYSQL_PASSWORD: LaLala1212!@
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3307:3306"

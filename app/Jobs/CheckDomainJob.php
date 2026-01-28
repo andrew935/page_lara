@@ -7,6 +7,7 @@ use App\Models\Domain;
 use App\Domains\DomainIncident;
 use App\Notifications\NotificationSetting;
 use App\Services\DomainCheckService;
+use App\Services\DomainExpirationService;
 use App\Jobs\SendAlertJob;
 use App\Jobs\NotifyDomainDownJob;
 use App\Jobs\NotifyDomainUpJob;
@@ -28,7 +29,7 @@ class CheckDomainJob implements ShouldQueue
     {
     }
 
-    public function handle(DomainCheckService $checker): void
+    public function handle(DomainCheckService $checker, DomainExpirationService $expirationService): void
     {
         $domain = Domain::find($this->domainId);
         if (!$domain) {
@@ -39,10 +40,43 @@ class CheckDomainJob implements ShouldQueue
 
         $accountId = $domain->account_id ?? 1;
         $account = Account::find($accountId);
-        $planSlug = $account?->activeSubscription()->with('plan')->first()?->plan?->slug ?? 'free';
-        $checkSsl = in_array($planSlug, ['pro', 'max'], true);
+        $subscription = $account?->activeSubscription()->with('plan')->first();
+        $plan = $subscription?->plan;
+        
+        // SSL checking is enabled for all paid plans (price_cents > 0)
+        // Paid plans: starter, business, enterprise
+        // Free plan: price_cents = 0, SSL checking disabled
+        $checkSsl = $plan && $plan->price_cents > 0;
 
         $result = $checker->check($domain->domain, $checkSsl);
+        
+        // Domain expiration checking is enabled for all paid plans (price_cents > 0)
+        // Free plan: expiration checking disabled
+        $isPaidPlan = $plan && $plan->price_cents > 0;
+        
+        // Check domain expiration (once per day to avoid rate limits) - only for paid plans
+        $shouldCheckExpiration = $isPaidPlan && (
+            !$domain->expires_checked_at 
+            || $domain->expires_checked_at->lt(now()->subDay())
+        );
+        
+        if ($shouldCheckExpiration) {
+            try {
+                $expirationResult = $expirationService->checkExpiration($domain->domain);
+                if ($expirationResult['expires_at']) {
+                    $result['expires_at'] = $expirationResult['expires_at'];
+                    $result['expires_checked_at'] = now();
+                }
+            } catch (\Throwable $e) {
+                Log::debug("Failed to check expiration for {$domain->domain}: " . $e->getMessage());
+            }
+        } elseif (!$isPaidPlan) {
+            // For free plans, clear expiration data if it exists (from previous paid plan)
+            if ($domain->expires_at || $domain->expires_checked_at) {
+                $result['expires_at'] = null;
+                $result['expires_checked_at'] = null;
+            }
+        }
 
         $payload = [
             'status' => $result['status'],
@@ -50,6 +84,14 @@ class CheckDomainJob implements ShouldQueue
             'last_checked_at' => $result['checked_at'],
             'last_check_error' => $result['error'],
         ];
+        
+        // Add expiration data if checked
+        if (isset($result['expires_at'])) {
+            $payload['expires_at'] = $result['expires_at'];
+        }
+        if (isset($result['expires_checked_at'])) {
+            $payload['expires_checked_at'] = $result['expires_checked_at'];
+        }
 
         $history = is_array($domain->lastcheck) ? $domain->lastcheck : [];
         $history[] = $result['status'] === 'ok' ? 1 : 0;

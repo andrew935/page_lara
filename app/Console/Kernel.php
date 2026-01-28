@@ -27,6 +27,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('domains:auto-import')
             ->dailyAt('06:00')
             ->withoutOverlapping();
+
+        // Process monthly billing on the last day of each month at 23:00
+        $schedule->command('billing:process-monthly')
+            ->monthlyOn(now()->endOfMonth()->day, '23:00')
+            ->withoutOverlapping();
     }
 
     /**

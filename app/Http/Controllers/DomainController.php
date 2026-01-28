@@ -10,6 +10,7 @@ use App\Services\DomainCheckService;
 use App\Support\AccountResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use App\Billing\Subscription;
 
 class DomainController extends Controller
 {
@@ -42,7 +43,12 @@ class DomainController extends Controller
         $down = (clone $statsQuery)->where('status', 'down')->count();
         $pending = (clone $statsQuery)->where('status', 'pending')->count();
 
-        return view('domains.index', compact('domains', 'total', 'up', 'down', 'pending'));
+        // Get current plan for expiration checking (paid plans only)
+        $subscription = $account->activeSubscription()->with('plan')->first();
+        $currentPlan = $subscription?->plan;
+        $isPaidPlan = $currentPlan && $currentPlan->price_cents > 0;
+
+        return view('domains.index', compact('domains', 'total', 'up', 'down', 'pending', 'currentPlan', 'isPaidPlan'));
     }
 
     public function store(Request $request, DomainService $service)
@@ -104,7 +110,8 @@ class DomainController extends Controller
 
         // Run the same logic as the queued job, but synchronously.
         $job = new CheckDomainJob($domain->id);
-        $job->handle($checker);
+        $expirationService = app(\App\Services\DomainExpirationService::class);
+        $job->handle($checker, $expirationService);
 
         $domain->refresh();
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PublicDomainQueueController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\NotificationSettingsController;
+use App\Http\Controllers\Api\StripeWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,9 @@ Route::prefix('cf')->middleware('cloudflare.webhook')->group(function () {
 
 // Public (non-session-auth) endpoint, protected by Bearer token (CLOUDFLARE_WEBHOOK_SECRET)
 Route::get('/domains/test-all/', [PublicDomainQueueController::class, 'testAllDomains']);
+
+// Stripe webhook endpoint (no auth middleware, verified by webhook signature)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/domains', [DomainApiController::class, 'index']);

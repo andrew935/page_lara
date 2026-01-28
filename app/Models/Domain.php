@@ -23,6 +23,8 @@ class Domain extends Model
         'last_checked_at',
         'last_check_error',
         'lastcheck',
+        'expires_at',
+        'expires_checked_at',
     ];
 
     protected $casts = [
@@ -34,6 +36,8 @@ class Domain extends Model
         'up_notified_at' => 'datetime',
         'ssl_valid' => 'boolean',
         'lastcheck' => 'array',
+        'expires_at' => 'datetime',
+        'expires_checked_at' => 'datetime',
     ];
 }
 

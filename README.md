@@ -73,15 +73,15 @@ Domain Status Change (live → down)
 
 ## Plans
 
-| Feature | Free | Pro ($59/mo) | Max ($99/mo) |
-|---------|------|--------------|--------------|
-| Domains | 50 | 200 | 500 |
-| Check Interval | 60 min | 30 min | 10 min |
-| SSL Monitoring | Basic | ✓ | Advanced |
-| Telegram Alerts | ✓ | ✓ | ✓ |
-| Webhook Alerts | - | ✓ | ✓ |
-| Auto Feed Import | - | - | ✓ |
-| Priority Support | - | ✓ | ✓ |
+| Feature | Free | Starter ($49/mo) | Business ($79/mo) | Enterprise ($109/mo) |
+|---------|------|------------------|-------------------|----------------------|
+| Domains | 20 | 100 | 200 | 500 |
+| Check Interval | 60 min | 30 min | 15 min | 10 min |
+| SSL Monitoring | ✓ | ✓ | ✓ | ✓ |
+| Telegram Alerts | ✓ | ✓ | ✓ | ✓ |
+| Webhook Alerts | ✓ | ✓ | ✓ | ✓ |
+| Auto Feed Import | - | ✓ | ✓ | ✓ |
+| Priority Support | - | - | ✓ | ✓ |
 
 ## Installation
 
@@ -204,6 +204,71 @@ Add to crontab:
 ```bash
 * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+## Stripe Payment Integration
+
+### Setup
+
+1. **Get Stripe API Keys:**
+   - Sign up at [stripe.com](https://stripe.com)
+   - Get your API keys from the Stripe Dashboard
+   - For testing, use test mode keys (starting with `pk_test_` and `sk_test_`)
+   - For production, use live mode keys (starting with `pk_live_` and `sk_live_`)
+
+2. **Add Environment Variables:**
+   ```env
+   STRIPE_KEY=pk_live_your_publishable_key
+   STRIPE_SECRET=sk_live_your_secret_key
+   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+   ```
+
+3. **Run Migrations:**
+   ```bash
+   php artisan migrate
+   ```
+
+4. **Seed Plans:**
+   ```bash
+   php artisan db:seed --class=AccountSetupSeeder
+   ```
+
+5. **Configure Webhook:**
+   - In Stripe Dashboard, go to Developers → Webhooks
+   - Add endpoint: `https://yourdomain.com/api/stripe/webhook`
+   - Select events to listen for:
+     - `payment_intent.succeeded`
+     - `payment_intent.payment_failed`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+     - `invoice.payment_succeeded`
+     - `invoice.payment_failed`
+   - Copy the webhook signing secret and add it to `.env` as `STRIPE_WEBHOOK_SECRET`
+
+### Billing Features
+
+- **Prorated Billing:** Users are charged based on days remaining in the current month when they subscribe
+- **End-of-Month Billing:** All subscriptions renew on the last day of each month at 23:00
+- **Immediate Upgrades:** When upgrading, users pay the prorated difference and get instant access to new features
+- **Scheduled Downgrades:** Downgrades take effect at the next billing cycle to avoid refunds
+- **Free Plan:** No payment method required for the Free plan (20 domains)
+
+### Testing Payments
+
+Use Stripe test cards:
+- Success: `4242 4242 4242 4242`
+- Decline: `4000 0000 0000 0002`
+- Requires authentication: `4000 0025 0000 3155`
+
+Use any future expiration date, any 3-digit CVC, and any ZIP code.
+
+### Manual Billing Command
+
+To manually process monthly billing:
+```bash
+php artisan billing:process-monthly
+```
+
+This command runs automatically on the last day of each month at 23:00.
 
 ## API Endpoints
 

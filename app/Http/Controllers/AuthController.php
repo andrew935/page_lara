@@ -62,7 +62,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', 'min:8'],
             'terms' => ['required', 'accepted'],
-            'plan' => ['nullable', 'string', 'in:free,pro,max'],
+            'plan' => ['nullable', 'string', 'in:free,starter,business,enterprise'],
         ]);
 
         $user = User::create([
@@ -122,6 +122,12 @@ class AuthController extends Controller
                         'starts_at' => now(),
                     ]
                 );
+
+                // If it's a paid plan, redirect to billing page to collect payment
+                if ($selectedPlan->price_cents > 0) {
+                    return redirect()->route('billing.index')
+                        ->with('info', 'Please add a payment method to activate your ' . $selectedPlan->name . ' plan subscription.');
+                }
             }
         }
 

@@ -16,13 +16,15 @@ class AccountSetupSeeder extends Seeder
     public function run(): void
     {
         $plans = [
-            // Plan minimum check intervals:
-            // - Free: 60 minutes
-            // - Pro: 30 minutes
-            // - Max: 10 minutes
-            ['name' => 'Free', 'slug' => 'free', 'max_domains' => 50, 'check_interval_minutes' => 60, 'price_cents' => 0],
-            ['name' => 'Pro', 'slug' => 'pro', 'max_domains' => 200, 'check_interval_minutes' => 30, 'price_cents' => 5900],
-            ['name' => 'Max', 'slug' => 'max', 'max_domains' => 500, 'check_interval_minutes' => 10, 'price_cents' => 9900],
+            // Plan configurations:
+            // - Free: 20 domains, 60 minutes check interval, $0/month
+            // - Starter: 100 domains, 30 minutes check interval, $49/month
+            // - Business: 200 domains, 15 minutes check interval, $79/month
+            // - Enterprise: 500 domains, 10 minutes check interval, $109/month
+            ['name' => 'Free', 'slug' => 'free', 'max_domains' => 20, 'check_interval_minutes' => 60, 'price_cents' => 0],
+            ['name' => 'Starter', 'slug' => 'starter', 'max_domains' => 100, 'check_interval_minutes' => 30, 'price_cents' => 4900],
+            ['name' => 'Business', 'slug' => 'business', 'max_domains' => 200, 'check_interval_minutes' => 15, 'price_cents' => 7900],
+            ['name' => 'Enterprise', 'slug' => 'enterprise', 'max_domains' => 500, 'check_interval_minutes' => 10, 'price_cents' => 10900],
         ];
 
         foreach ($plans as $plan) {

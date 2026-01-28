@@ -25,8 +25,10 @@ class AccountController extends Controller
         $maxDomains = $plans->maxDomains($account);
         $minInterval = $plans->checkIntervalMinutes($account);
 
+        // Only show the 4 main plans: Free, Starter, Business, Enterprise
         $allPlans = Plan::query()
             ->where('active', true)
+            ->whereIn('slug', ['free', 'starter', 'business', 'enterprise'])
             ->orderBy('price_cents')
             ->get();
 

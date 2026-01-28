@@ -153,6 +153,7 @@
                             <th>Status</th>
                             <th>SSL</th>
                             <th>Last Checked</th>
+                            <th>Expires</th>
                             <th>Campaign</th>
                            
                             <th>Error</th>
@@ -184,6 +185,36 @@
                                     @endif
                                 </td>
                                 <td class="col-checked">{{ $domain->last_checked_at ? $domain->last_checked_at->diffForHumans() : '—' }}</td>
+                                <td class="col-expires">
+                                    @if($isPaidPlan ?? false)
+                                        @if($domain->expires_at)
+                                            @php
+                                                $daysUntilExpiry = now()->diffInDays($domain->expires_at, false);
+                                                $isExpired = $domain->expires_at->isPast();
+                                                $isExpiringSoon = !$isExpired && $daysUntilExpiry <= 30;
+                                            @endphp
+                                            @if($isExpired)
+                                                <span class="badge bg-danger" title="Expired on {{ $domain->expires_at->format('M d, Y') }}">
+                                                    Expired
+                                                </span>
+                                            @elseif($isExpiringSoon)
+                                                <span class="badge bg-warning text-dark" title="Expires on {{ $domain->expires_at->format('M d, Y') }}">
+                                                    {{ $daysUntilExpiry }} days
+                                                </span>
+                                            @else
+                                                <span class="text-muted" title="Expires on {{ $domain->expires_at->format('M d, Y') }}">
+                                                    {{ $domain->expires_at->format('M d, Y') }}
+                                                </span>
+                                            @endif
+                                        @else
+                                            <span class="text-muted" title="Expiration date will be checked automatically">Checking...</span>
+                                        @endif
+                                    @else
+                                        <span class="text-muted" title="Domain expiration checking is available in paid plans">
+                                            <a href="{{ route('billing.index') }}" class="text-decoration-none">Upgrade</a>
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="col-campaign text-truncate" style="max-width:180px;">
                                     {{ $domain->campaign ?? '—' }}
                                 </td>
@@ -439,6 +470,7 @@
                 <td class="col-status"></td>
                 <td class="col-ssl"></td>
                 <td class="col-checked"></td>
+                <td class="col-expires"></td>
                 <td class="col-campaign text-truncate" style="max-width:180px;"></td>
                 <td class="col-error text-truncate" style="max-width:250px;"></td>
                 <td class="text-end" style="min-width: 140px; white-space: nowrap; padding: 8px;">
@@ -463,6 +495,7 @@
         const cs = row.querySelector('.col-status');
         const ssl = row.querySelector('.col-ssl');
         const chk = row.querySelector('.col-checked');
+        const exp = row.querySelector('.col-expires');
         const camp = row.querySelector('.col-campaign');
         const err = row.querySelector('.col-error');
 
@@ -470,6 +503,30 @@
         if (cs) cs.innerHTML = renderBadgeStatus(domain.status);
         if (ssl) ssl.innerHTML = renderBadgeSsl(domain.ssl_valid);
         if (chk) chk.textContent = domain.last_checked_at ?? '—';
+        if (exp) {
+            const isPaidPlan = @json($isPaidPlan ?? false);
+            if (isPaidPlan) {
+                if (domain.expires_at) {
+                    const expiresDate = new Date(domain.expires_at);
+                    const now = new Date();
+                    const daysUntilExpiry = Math.ceil((expiresDate - now) / (1000 * 60 * 60 * 24));
+                    const isExpired = expiresDate < now;
+                    const isExpiringSoon = !isExpired && daysUntilExpiry <= 30;
+                    
+                    if (isExpired) {
+                        exp.innerHTML = `<span class="badge bg-danger" title="Expired on ${expiresDate.toLocaleDateString()}">Expired</span>`;
+                    } else if (isExpiringSoon) {
+                        exp.innerHTML = `<span class="badge bg-warning text-dark" title="Expires on ${expiresDate.toLocaleDateString()}">${daysUntilExpiry} days</span>`;
+                    } else {
+                        exp.innerHTML = `<span class="text-muted" title="Expires on ${expiresDate.toLocaleDateString()}">${expiresDate.toLocaleDateString()}</span>`;
+                    }
+                } else {
+                    exp.innerHTML = '<span class="text-muted" title="Expiration date will be checked automatically">Checking...</span>';
+                }
+            } else {
+                exp.innerHTML = '<span class="text-muted" title="Domain expiration checking is available in paid plans"><a href="{{ route("billing.index") }}" class="text-decoration-none">Upgrade</a></span>';
+            }
+        }
         if (camp) camp.textContent = domain.campaign ?? '—';
         const editBtn = row.querySelector('.btn-edit-domain');
         if (editBtn) {
