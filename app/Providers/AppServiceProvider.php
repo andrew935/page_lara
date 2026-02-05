@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,5 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Fix for older MySQL versions
         Schema::defaultStringLength(191);
+
+        View::share('betaMode', config('app.beta_mode'));
     }
 }

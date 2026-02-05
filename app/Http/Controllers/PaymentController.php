@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Billing\Plan;
 use App\Billing\Services\StripeService;
+use App\Billing\Subscription;
 use App\Models\Domain;
 use App\Support\AccountResolver;
 use Illuminate\Http\Request;
@@ -346,5 +347,41 @@ class PaymentController extends Controller
                 'message' => 'Failed to cancel subscription: ' . $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Select a plan during beta (no payment required)
+     */
+    public function selectBetaPlan(Request $request)
+    {
+        if (!config('app.beta_mode')) {
+            return response()->json(['message' => 'Beta plan selection is not available.'], 403);
+        }
+
+        $data = $request->validate([
+            'plan_slug' => ['required', 'string', 'in:free,starter,business,enterprise'],
+        ]);
+
+        $account = AccountResolver::current();
+        $subscription = $account->activeSubscription()->firstOrFail();
+        $newPlan = Plan::where('slug', $data['plan_slug'])->where('active', true)->firstOrFail();
+
+        $currentDomainCount = Domain::where('account_id', $account->id)->count();
+        if ($currentDomainCount > $newPlan->max_domains) {
+            return response()->json([
+                'message' => "You have {$currentDomainCount} domains. The {$newPlan->name} plan allows up to {$newPlan->max_domains}. Please remove " . ($currentDomainCount - $newPlan->max_domains) . ' domain(s) first.',
+            ], 422);
+        }
+
+        $subscription->update([
+            'plan_id' => $newPlan->id,
+            'status' => 'active',
+            'next_plan_id' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Plan updated to ' . $newPlan->name . ' (Free Beta)',
+            'subscription' => $subscription->fresh()->load('plan'),
+        ]);
     }
 }

@@ -123,8 +123,8 @@ class AuthController extends Controller
                     ]
                 );
 
-                // If it's a paid plan, redirect to billing page to collect payment
-                if ($selectedPlan->price_cents > 0) {
+                // If it's a paid plan and not beta, redirect to billing page to collect payment
+                if ($selectedPlan->price_cents > 0 && !config('app.beta_mode')) {
                     return redirect()->route('billing.index')
                         ->with('info', 'Please add a payment method to activate your ' . $selectedPlan->name . ' plan subscription.');
                 }

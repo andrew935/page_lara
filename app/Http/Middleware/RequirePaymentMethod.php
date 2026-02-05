@@ -16,6 +16,11 @@ class RequirePaymentMethod
      */
     public function handle(Request $request, Closure $next)
     {
+        // Skip during beta mode (all plans free, no card required)
+        if (config('app.beta_mode')) {
+            return $next($request);
+        }
+
         // Skip for guest users
         if (!auth()->check()) {
             return $next($request);

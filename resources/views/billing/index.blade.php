@@ -42,7 +42,10 @@
                         <div class="col-md-6">
                             <h4 class="fw-semibold mb-2">{{ $currentPlan->name ?? 'Free' }}</h4>
                             <p class="text-muted mb-2">
-                                @if($currentPlan && $currentPlan->price_cents > 0)
+                                @if(config('app.beta_mode') && $currentPlan && $currentPlan->price_cents > 0)
+                                    <span style="text-decoration: line-through; color: #999;">${{ number_format($currentPlan->price_cents / 100, 2) }} / month</span>
+                                    <span class="badge bg-success ms-1">Free Beta</span>
+                                @elseif($currentPlan && $currentPlan->price_cents > 0)
                                     ${{ number_format($currentPlan->price_cents / 100, 2) }} / month
                                 @else
                                     No charge
@@ -83,7 +86,10 @@
                             <div class="col-md-4">
                                 <div class="text-muted small mb-1">Monthly Price</div>
                                 <div class="fw-semibold fs-16">
-                                    @if($currentPlan->price_cents > 0)
+                                    @if(config('app.beta_mode') && $currentPlan->price_cents > 0)
+                                        <span style="text-decoration: line-through; color: #999;">${{ number_format($currentPlan->price_cents / 100, 2) }}</span>
+                                        <span class="text-success">Free Beta</span>
+                                    @elseif($currentPlan->price_cents > 0)
                                         ${{ number_format($currentPlan->price_cents / 100, 2) }}
                                     @else
                                         Free
@@ -106,30 +112,37 @@
                     <div class="card-title">Payment Method</div>
                 </div>
                 <div class="card-body">
-                    @if($subscription && $subscription->stripe_payment_method_id)
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <i class="ri-bank-card-line fs-18 me-2"></i>
-                                <span>Payment method on file</span>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentMethodModal">
-                                Update Payment Method
-                            </button>
+                    @if(config('app.beta_mode'))
+                        <div class="alert alert-success mb-0">
+                            <i class="ri-gift-line me-2"></i>
+                            <strong>Beta Period:</strong> No payment method required during beta. Enjoy all features for free!
                         </div>
                     @else
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <i class="ri-alert-line fs-18 me-2 text-warning"></i>
-                                <span class="text-muted">No payment method added yet</span>
-                                @if($currentPlan && $currentPlan->price_cents > 0)
-                                    <span class="badge bg-warning ms-2">Required for paid plan</span>
-                                @endif
+                        @if($subscription && $subscription->stripe_payment_method_id)
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="ri-bank-card-line fs-18 me-2"></i>
+                                    <span>Payment method on file</span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentMethodModal">
+                                    Update Payment Method
+                                </button>
                             </div>
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentMethodModal">
-                                <i class="ri-add-line me-1"></i>
-                                Add Payment Method
-                            </button>
-                        </div>
+                        @else
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <i class="ri-alert-line fs-18 me-2 text-warning"></i>
+                                    <span class="text-muted">No payment method added yet</span>
+                                    @if($currentPlan && $currentPlan->price_cents > 0)
+                                        <span class="badge bg-warning ms-2">Required for paid plan</span>
+                                    @endif
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#paymentMethodModal">
+                                    <i class="ri-add-line me-1"></i>
+                                    Add Payment Method
+                                </button>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -152,15 +165,16 @@
                                     <h5 class="fw-semibold mb-3">{{ $plan->name }}</h5>
                                     <div class="mb-3">
                                         <span class="fs-24 fw-bold">
-                                            @if($plan->price_cents > 0)
+                                            @if(config('app.beta_mode') && $plan->price_cents > 0)
+                                                <span style="text-decoration: line-through; color: #999; font-size: 0.6em;">${{ number_format($plan->price_cents / 100, 0) }}/mo</span>
+                                                <span class="text-success d-block">Free Beta</span>
+                                            @elseif($plan->price_cents > 0)
                                                 ${{ number_format($plan->price_cents / 100, 0) }}
+                                                <span class="text-muted">/month</span>
                                             @else
                                                 Free
                                             @endif
                                         </span>
-                                        @if($plan->price_cents > 0)
-                                            <span class="text-muted">/month</span>
-                                        @endif
                                     </div>
                                     
                                     <div class="text-start mb-3">
@@ -194,29 +208,39 @@
                                         @endif
                                     </div>
 
-                                    @if($currentPlan && $currentPlan->id === $plan->id)
-                                        <button class="btn btn-outline-primary w-100" disabled>Current Plan</button>
-                                    @elseif($plan->price_cents > 0)
-                                        @if($currentPlan && $plan->price_cents > $currentPlan->price_cents)
-                                            <button type="button" class="btn btn-primary w-100 upgrade-btn" data-plan-slug="{{ $plan->slug }}" data-plan-name="{{ $plan->name }}" data-plan-price="{{ $plan->price_cents }}">
-                                                Upgrade
-                                            </button>
-                                        @elseif($currentPlan && $plan->price_cents < $currentPlan->price_cents)
-                                            <button type="button" class="btn btn-warning w-100 downgrade-btn" data-plan-slug="{{ $plan->slug }}" data-plan-name="{{ $plan->name }}">
-                                                Downgrade
-                                            </button>
+                                    @if(config('app.beta_mode'))
+                                        @if($currentPlan && $currentPlan->id === $plan->id)
+                                            <button class="btn btn-outline-primary w-100" disabled>Current Plan</button>
                                         @else
-                                            <button type="button" class="btn btn-primary w-100 subscribe-btn" data-plan-slug="{{ $plan->slug }}" data-plan-name="{{ $plan->name }}" data-plan-price="{{ $plan->price_cents }}">
-                                                Subscribe
+                                            <button type="button" class="btn btn-primary w-100 beta-select-btn" data-plan-slug="{{ $plan->slug }}">
+                                                Select Plan (Free Beta)
                                             </button>
                                         @endif
                                     @else
-                                        @if($currentPlan && $currentPlan->price_cents > 0)
-                                            <button type="button" class="btn btn-outline-secondary w-100 cancel-btn">
-                                                Cancel Subscription
-                                            </button>
+                                        @if($currentPlan && $currentPlan->id === $plan->id)
+                                            <button class="btn btn-outline-primary w-100" disabled>Current Plan</button>
+                                        @elseif($plan->price_cents > 0)
+                                            @if($currentPlan && $plan->price_cents > $currentPlan->price_cents)
+                                                <button type="button" class="btn btn-primary w-100 upgrade-btn" data-plan-slug="{{ $plan->slug }}" data-plan-name="{{ $plan->name }}" data-plan-price="{{ $plan->price_cents }}">
+                                                    Upgrade
+                                                </button>
+                                            @elseif($currentPlan && $plan->price_cents < $currentPlan->price_cents)
+                                                <button type="button" class="btn btn-warning w-100 downgrade-btn" data-plan-slug="{{ $plan->slug }}" data-plan-name="{{ $plan->name }}">
+                                                    Downgrade
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-primary w-100 subscribe-btn" data-plan-slug="{{ $plan->slug }}" data-plan-name="{{ $plan->name }}" data-plan-price="{{ $plan->price_cents }}">
+                                                    Subscribe
+                                                </button>
+                                            @endif
                                         @else
-                                            <button class="btn btn-outline-secondary w-100" disabled>Free Plan</button>
+                                            @if($currentPlan && $currentPlan->price_cents > 0)
+                                                <button type="button" class="btn btn-outline-secondary w-100 cancel-btn">
+                                                    Cancel Subscription
+                                                </button>
+                                            @else
+                                                <button class="btn btn-outline-secondary w-100" disabled>Free Plan</button>
+                                            @endif
                                         @endif
                                     @endif
                                 </div>
@@ -672,8 +696,42 @@
         });
     });
 
-    // Force payment method addition for paid plans without payment
-    @if($currentPlan && $currentPlan->price_cents > 0 && (!$subscription || !$subscription->stripe_payment_method_id))
+    // Beta plan selection (no payment required)
+    document.querySelectorAll('.beta-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const planSlug = btn.dataset.planSlug;
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            fetch('{{ route('billing.beta-select') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ plan_slug: planSlug })
+            })
+            .then(response => response.json().then(data => ({ status: response.status, data })))
+            .then(({ status, data }) => {
+                if (status === 422) {
+                    alert(data.message || 'Cannot switch to this plan.');
+                    btn.disabled = false;
+                    btn.textContent = 'Select Plan (Free Beta)';
+                } else {
+                    alert(data.message || 'Plan updated.');
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + (error.message || 'Failed to update plan'));
+                btn.disabled = false;
+                btn.textContent = 'Select Plan (Free Beta)';
+            });
+        });
+    });
+
+    // Force payment method addition for paid plans without payment (skip during beta)
+    @if(!config('app.beta_mode') && $currentPlan && $currentPlan->price_cents > 0 && (!$subscription || !$subscription->stripe_payment_method_id))
     (function() {
         const paymentRequired = true;
         const paymentModal = new bootstrap.Modal(document.getElementById('paymentMethodModal'));

@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::post('billing/upgrade', [PaymentController::class, 'upgrade'])->name('billing.upgrade');
     Route::post('billing/downgrade', [PaymentController::class, 'downgrade'])->name('billing.downgrade');
     Route::post('billing/cancel', [PaymentController::class, 'cancel'])->name('billing.cancel');
+    Route::post('billing/beta-select', [PaymentController::class, 'selectBetaPlan'])->name('billing.beta-select');
 
     // Payments History
     Route::get('payments', [PaymentsController::class, 'index'])->name('payments.index');

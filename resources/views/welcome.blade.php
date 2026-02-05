@@ -884,7 +884,14 @@
             <div class="pricing-card">
                 <div class="pricing-header">
                     <div class="pricing-name">Starter</div>
-                    <div class="pricing-price">$49<span>/month</span></div>
+                    <div class="pricing-price">
+                        @if(config('app.beta_mode'))
+                            <span style="text-decoration: line-through; color: #999; font-size: 0.7em;">$49/month</span>
+                            <span class="text-success">Free Beta</span>
+                        @else
+                            $49<span>/month</span>
+                        @endif
+                    </div>
                 </div>
                 <ul class="pricing-features">
                     <li>Up to 100 domains</li>
@@ -901,7 +908,14 @@
             <div class="pricing-card featured">
                 <div class="pricing-header">
                     <div class="pricing-name">Business</div>
-                    <div class="pricing-price">$79<span>/month</span></div>
+                    <div class="pricing-price">
+                        @if(config('app.beta_mode'))
+                            <span style="text-decoration: line-through; color: #999; font-size: 0.7em;">$79/month</span>
+                            <span class="text-success">Free Beta</span>
+                        @else
+                            $79<span>/month</span>
+                        @endif
+                    </div>
                 </div>
                 <ul class="pricing-features">
                     <li>Up to 200 domains</li>
@@ -919,7 +933,14 @@
             <div class="pricing-card">
                 <div class="pricing-header">
                     <div class="pricing-name">Enterprise</div>
-                    <div class="pricing-price">$109<span>/month</span></div>
+                    <div class="pricing-price">
+                        @if(config('app.beta_mode'))
+                            <span style="text-decoration: line-through; color: #999; font-size: 0.7em;">$109/month</span>
+                            <span class="text-success">Free Beta</span>
+                        @else
+                            $109<span>/month</span>
+                        @endif
+                    </div>
                 </div>
                 <ul class="pricing-features">
                     <li>Up to 500 domains</li>

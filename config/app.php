@@ -43,6 +43,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Beta Mode
+    |--------------------------------------------------------------------------
+    |
+    | When true, all plans are free (no payment required). Prices show as
+    | strikethrough with "Free Beta" and users can select any plan without a card.
+    |
+    */
+
+    'beta_mode' => env('BETA_MODE', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |
