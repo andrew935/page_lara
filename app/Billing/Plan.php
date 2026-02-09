@@ -14,6 +14,7 @@ class Plan extends Model
         'price_cents',
         'currency',
         'active',
+        'history_retention_days',
     ];
 
     protected $casts = [

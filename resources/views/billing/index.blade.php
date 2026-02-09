@@ -200,6 +200,12 @@
                                             <i class="ri-check-line text-success me-2"></i>
                                             <span>Email & Telegram alerts</span>
                                         </div>
+                                        @if(isset($plan->history_retention_days) && $plan->history_retention_days > 0)
+                                        <div class="mb-2">
+                                            <i class="ri-check-line text-success me-2"></i>
+                                            <span>{{ $plan->history_retention_days }}-day history</span>
+                                        </div>
+                                        @endif
                                         @if($plan->price_cents > 0)
                                         <div class="mb-2">
                                             <i class="ri-check-line text-success me-2"></i>

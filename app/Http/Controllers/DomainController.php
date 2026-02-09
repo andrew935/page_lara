@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\DomainIncident;
 use App\Domains\Services\DomainService;
 use App\Jobs\ProcessImportBatchJob;
 use App\Jobs\CheckDomainJob;
@@ -232,6 +233,29 @@ class DomainController extends Controller
         }
 
         return redirect()->route('domains.index')->with('success', 'Domain deleted.');
+    }
+
+    /**
+     * Show domain check log (last 30 days of incidents + current status).
+     */
+    public function showLog(Domain $domain)
+    {
+        $account = AccountResolver::current();
+        $user = request()->user();
+        $isAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('Admin');
+        if ($domain->account_id && $domain->account_id !== $account->id && !$isAdmin) {
+            abort(403);
+        }
+
+        $incidents = DomainIncident::where('domain_id', $domain->id)
+            ->where('created_at', '>=', now()->subDays(30))
+            ->orderByDesc('opened_at')
+            ->paginate(50);
+
+        return view('domains.log', [
+            'domain' => $domain,
+            'incidents' => $incidents,
+        ]);
     }
 }
 

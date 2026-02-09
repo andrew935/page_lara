@@ -15,6 +15,8 @@ class NotificationSetting extends Model
         'telegram_chat_id',
         'telegram_api_key',
         'slack_webhook_url',
+        'discord_webhook_url',
+        'teams_webhook_url',
         'channels',
     ];
 

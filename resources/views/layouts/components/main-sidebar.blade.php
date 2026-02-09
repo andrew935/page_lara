@@ -52,10 +52,18 @@
 						<!-- End::slide__category -->
 
 						<!-- Start::slide -->
-						<li class="slide {{ request()->is('connections/telegram') ? 'active' : '' }}">
-							<a href="{{ route('connections.telegram.edit') }}" class="side-menu__item">
-								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M224,56a24,24,0,0,0-24-24L56,32A24,24,0,0,0,32,56V200a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24Z" opacity="0.2"/><rect x="32" y="32" width="192" height="192" rx="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M80,112a24,24,0,1,1,24,24H80v24h40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="152" y1="112" x2="176" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="152" y1="144" x2="176" y2="144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								<span class="side-menu__label">Telegram</span>
+						<li class="slide {{ request()->is('notifications*') ? 'active' : '' }}">
+							<a href="{{ route('notifications.edit') }}" class="side-menu__item">
+								<i class="ri-notification-3-line side-menu__icon"></i>
+								<span class="side-menu__label">Notifications</span>
+							</a>
+						</li>
+						<!-- End::slide -->
+						<!-- Start::slide -->
+						<li class="slide {{ request()->is('connections/telegram/logs') ? 'active' : '' }}">
+							<a href="{{ route('connections.telegram.logs') }}" class="side-menu__item">
+								<i class="ri-file-list-3-line side-menu__icon"></i>
+								<span class="side-menu__label">Notification Logs</span>
 							</a>
 						</li>
 						<!-- End::slide -->

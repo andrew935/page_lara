@@ -269,6 +269,9 @@
                                         <button type="button" class="btn btn-primary btn-sm btn-check-domain" data-domain-id="{{ $domain->id }}" title="Check this domain">
                                             <i class="ri-search-line me-1"></i> Check
                                         </button>
+                                        <a href="{{ route('domains.log', $domain) }}" class="btn btn-info btn-sm" title="View check log">
+                                            <i class="ri-history-line me-1"></i> Log
+                                        </a>
                                         <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-domain"
                                                 data-domain-id="{{ $domain->id }}"
                                                 data-domain="{{ $domain->domain }}"

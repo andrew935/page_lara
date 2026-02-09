@@ -32,6 +32,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('billing:process-monthly')
             ->monthlyOn(now()->endOfMonth()->day, '23:00')
             ->withoutOverlapping();
+
+        // Prune old domain data per plan retention (daily at 03:00)
+        $schedule->command('data:prune-history')->dailyAt('03:00')->withoutOverlapping();
     }
 
     /**

@@ -29,6 +29,8 @@ class NotificationSettingsController extends Controller
             'telegram_chat_id' => ['nullable', 'string'],
             'telegram_api_key' => ['nullable', 'string'],
             'slack_webhook_url' => ['nullable', 'url'],
+            'discord_webhook_url' => ['nullable', 'url'],
+            'teams_webhook_url' => ['nullable', 'url'],
         ]);
 
         $account = AccountResolver::current();

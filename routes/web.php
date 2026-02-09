@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationSettingsController;
 use App\Http\Controllers\TelegramConnectionController;
 use App\Http\Controllers\TelegramLogController;
 use App\Http\Controllers\DomainController;
@@ -55,14 +56,20 @@ Route::middleware('auth')->group(function () {
         Route::post('admin/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('admin.promotions.toggle');
     });
 
-    // Connections
-    Route::get('connections/telegram', [TelegramConnectionController::class, 'edit'])->name('connections.telegram.edit');
+    // Notifications (unified channels)
+    Route::get('notifications', [NotificationSettingsController::class, 'edit'])->name('notifications.edit');
+    Route::post('notifications', [NotificationSettingsController::class, 'update'])->name('notifications.update');
+    Route::post('notifications/test/{channel}', [NotificationSettingsController::class, 'test'])->name('notifications.test');
+
+    // Connections (legacy Telegram page + shared logs)
+    Route::get('connections/telegram', fn () => redirect()->route('notifications.edit'))->name('connections.telegram.edit');
     Route::post('connections/telegram', [TelegramConnectionController::class, 'update'])->name('connections.telegram.update');
     Route::post('connections/telegram/test', [TelegramConnectionController::class, 'test'])->name('connections.telegram.test');
     Route::get('connections/telegram/logs', [TelegramLogController::class, 'index'])->name('connections.telegram.logs');
 
     // Domains
     Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
+    Route::get('domains/{domain}/log', [DomainController::class, 'showLog'])->name('domains.log');
     Route::post('domains', [DomainController::class, 'store'])->name('domains.store');
     Route::post('domains/ingest', [DomainController::class, 'ingest'])->name('domains.ingest');
     Route::post('domains/check-all', [DomainController::class, 'checkAll'])->name('domains.checkAll');

@@ -7,3 +7,6 @@
 # Expire promotions (auto-downgrade back to Free)
 0 * * * * cd /var/www && /usr/local/bin/php artisan promotions:expire >> /var/log/cron.log 2>&1
 
+# Prune old domain data per plan retention (daily at 03:00)
+0 3 * * * cd /var/www && [ -f .env ] && /usr/local/bin/php artisan data:prune-history >> /var/log/cron.log 2>&1
+

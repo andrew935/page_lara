@@ -16,7 +16,6 @@ class TelegramLogController extends Controller
 
         $query = NotificationLog::query()
             ->where('account_id', $account->id)
-            ->where('channel', 'telegram')
             ->orderByDesc('id');
 
         $status = $request->query('status');
@@ -24,11 +23,18 @@ class TelegramLogController extends Controller
             $query->where('status', $status);
         }
 
+        $channel = $request->query('channel');
+        $allowedChannels = ['telegram', 'email', 'slack', 'discord', 'teams'];
+        if (is_string($channel) && in_array($channel, $allowedChannels, true)) {
+            $query->where('channel', $channel);
+        }
+
         $logs = $query->paginate(50)->withQueryString();
 
         return view('connections.telegram-logs', [
             'logs' => $logs,
             'status' => $status,
+            'channel' => $channel,
         ]);
     }
 }

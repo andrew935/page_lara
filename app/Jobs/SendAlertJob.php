@@ -50,12 +50,19 @@ class SendAlertJob implements ShouldQueue
 
             try {
                 if ($channel === 'email' && $settings->email) {
-                    Mail::raw($this->message, function ($mail) use ($settings) {
+                    $subject = (str_contains($this->message, '🟢') || stripos($this->message, 'UP') !== false)
+                        ? 'Domain Up Alert'
+                        : 'Domain Down Alert';
+                    Mail::raw($this->message, function ($mail) use ($settings, $subject) {
                         $mail->to($settings->email)
-                            ->subject('Domain Down Alert');
+                            ->subject($subject);
                     });
                 } elseif ($channel === 'slack' && $settings->slack_webhook_url) {
                     Http::timeout(5)->post($settings->slack_webhook_url, ['text' => $this->message]);
+                } elseif ($channel === 'discord' && $settings->discord_webhook_url) {
+                    Http::timeout(5)->post($settings->discord_webhook_url, ['content' => $this->message]);
+                } elseif ($channel === 'teams' && $settings->teams_webhook_url) {
+                    Http::timeout(5)->post($settings->teams_webhook_url, ['text' => $this->message]);
                 } elseif ($channel === 'telegram' && $settings->telegram_api_key && $settings->telegram_chat_id) {
                     // Match Telegram "GET with query params" style
                     Http::timeout(5)->get("https://api.telegram.org/bot{$settings->telegram_api_key}/sendMessage", [
